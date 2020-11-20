@@ -41,13 +41,6 @@ Clone this repo and run `pip install -e pyfoal/`.
 ### Usage
 
 
-##### Force-align audio and text from files
-
-```
-alignment = pyfoal.from_file(audio_file, text_file)
-```
-
-
 ##### Force-align audio and text from loaded audio and text
 
 ```
@@ -57,6 +50,13 @@ alignment = pyfoal.align(audio, sample_rate, text)
 `audio` must be a `torch.tensor` with shape `(1, samples)`.
 
 
+##### Force-align audio and text from files
+
+```
+alignment = pyfoal.from_file(audio_file, text_file)
+```
+
+
 ##### Specifying where to store temporary files
 
 By default, `pyfoal` will write temporary data to a system default location
@@ -64,13 +64,8 @@ determined by the built-in `tempfile` module. You can override this location as
 follows.
 
 ```
-pyfoal.from_file(..., tmpdir='/path/to/store/tmp/files/')
-```
-
-OR
-
-```
 pyfoal.align(..., tmpdir='/path/to/store/tmp/files/')
+pyfoal.from_file(..., tmpdir='/path/to/store/tmp/files/')
 ```
 
 All temporary files are automatically removed after use.
