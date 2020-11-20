@@ -5,8 +5,8 @@ Relative to the original implementation, this repo provides the following.
  - Support for Python 3
  - Support for performing forced alignment both in Python and on the
    command-line
- - Support for multiprocessing. Previous implementations attempt to write
-   to the same temporary files when multiprocessing.
+ - Support for multiprocessing. Previous implementations create data races
+   by overwriting the same temporary files.
  - Fewer alignment failures due to, e.g., out-of-vocabulary (OOV) words or
    punctuation
  - Direct integration with [`pypar`](https://github.com/maxrmorrison/pypar),
