@@ -4,10 +4,12 @@ import string
 import subprocess
 import tempfile
 import uuid
+from pathlib import Path
 
 import g2p_en
+import pypar
 
-import spa
+import pyfoal
 
 
 ###############################################################################
@@ -15,6 +17,7 @@ import spa
 ###############################################################################
 
 
+ASSETS_DIR = Path(__file__).parent / 'assets'
 SAMPLE_RATE = 16000
 
 
@@ -23,16 +26,16 @@ SAMPLE_RATE = 16000
 ###############################################################################
 
 
-def align(audio, text, htk_directory, tmpdir=None):
+def align(audio, sample_rate, text, tmpdir=None):
     """Phoneme-level forced-alignment with HTK
 
     Arguments
         audio : torch.tensor(shape=(1, time))
             The speech signal to process
+        sample_rate : int
+            The audio sampling rate
         text : string
             The corresponding transcript
-        htk_directory : string
-            Path to htk binaries
         tmpdir : string or None
             Directory to save temporary values. If None, uses system default.
 
@@ -40,6 +43,10 @@ def align(audio, text, htk_directory, tmpdir=None):
         alignment : Alignment
             The forced alignment
     """
+    # Maybe resample
+    if sample_rate != SAMPLE_RATE:
+        audio = torchaudio.transforms.Resample(sample_rate, SAMPLE_RATE)(audio)
+
     # Cache aligner
     if not hasattr(align, 'aligner'):
         align.aligner = Aligner()
@@ -48,7 +55,7 @@ def align(audio, text, htk_directory, tmpdir=None):
     return align.aligner(audio, text, tmpdir)
 
 
-def from_file(audio_file, text_file, htk_directory, tmpdir=None):
+def from_file(audio_file, text_file, tmpdir=None):
     """Phoneme alignment from audio and text files
 
     Arguments
@@ -56,8 +63,6 @@ def from_file(audio_file, text_file, htk_directory, tmpdir=None):
             The audio file to process
         text_file : string
             The corresponding transcript file
-        htk_directory : string
-            Path to htk binaries
         tmpdir : string or None
             Directory to save temporary values. If None, uses system default.
 
@@ -72,13 +77,12 @@ def from_file(audio_file, text_file, htk_directory, tmpdir=None):
     text = pyfoal.load.text(text_file)
 
     # Align
-    return align(audio, text, tmpdir)
+    return align(audio, SAMPLE_RATE, text, tmpdir)
 
 
 def from_file_to_file(audio_file,
                       text_file,
                       output_file,
-                      htk_directory,
                       tmpdir=None):
     """Perform phoneme alignment from files and save to disk
 
@@ -89,8 +93,6 @@ def from_file_to_file(audio_file,
             The corresponding transcript file
         output_file : string
             The file to save the alignment
-        htk_directory : string
-            Path to htk binaries
         tmpdir : string or None
             Directory to save temporary values. If None, uses system default.
     """
@@ -106,17 +108,12 @@ def from_file_to_file(audio_file,
 class Aligner:
     """P2fa forced aligner"""
 
-    def __init__(self, htk_directory):
-        """Aligner constructor
-
-        Arguments
-            htk_directory : string
-                Path to htk binaries
-        """
-        self.hcopy = os.path.join(htk_directory, 'config')
-        self.macros = os.path.join(htk_directory, 'macros')
-        self.model = os.path.join(htk_directory, 'hmmdefs')
-        self.monophones = os.path.join(htk_directory, 'monophones')
+    def __init__(self):
+        """Aligner constructor"""
+        self.hcopy = ASSETS_DIR / 'config'
+        self.macros = ASSETS_DIR / 'macros'
+        self.model = ASSETS_DIR / 'hmmdefs'
+        self.monophones = ASSETS_DIR / 'monophones'
 
         punctuation = [s for s in string.punctuation + '”“—' if s != '-']
         self.punctuation_table = str.maketrans('-', ' ', ''.join(punctuation))
@@ -153,7 +150,7 @@ class Aligner:
                          output_file)
 
             # Retrieve alignment from file
-            return spa.Alignment(output_file)
+            return pypar.Alignment(output_file)
 
         finally:
 

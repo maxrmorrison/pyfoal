@@ -12,8 +12,11 @@ setup(
     author='Max Morrison',
     author_email='maxrmorrison@gmail.com',
     url='https://github.com/maxrmorrison/pyfoal',
-    install_requires=['g2p_en', 'pypar', 'torchaudio'],
-    packages=['torchcrepe'],
+    # TODO - pypar
+    # install_requires=['g2p_en', 'pypar', 'torchaudio'],
+    install_requires=['g2p_en', 'torchaudio'],
+    packages=['pyfoal'],
+    package_data={'pyfoal': ['assets/*']},
     long_description=long_description,
     long_description_content_type='text/markdown',
     keywords=['align', 'duration', 'phoneme', 'speech'],

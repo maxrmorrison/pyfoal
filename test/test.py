@@ -8,11 +8,9 @@ import pyfoal
 ###############################################################################
 
 
-def test_align(htk_directory):
+def test_align():
     """Test forced alignment"""
-    alignment = pyfoal.from_file(path('test.wav'),
-                                 path('test.txt'),
-                                 htk_directory=htk_directory)
+    alignment = pyfoal.from_file(path('test.wav'), path('test.txt'))
     # TODO - assertions
     import pdb; pdb.set_trace()
 

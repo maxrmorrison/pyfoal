@@ -15,7 +15,6 @@ def parse_args():
     parser.add_argument('audio', help='The audio file to process')
     parser.add_argument('text', help='The corresponding transcript file')
     parser.add_argument('output_file', help='The file to save the alignment')
-    parser.add_argument('htk_directory', help='The path to the HTK binaries')
 
     # Optional arguments
     parser.add_argument('--tmpdir', help='Directory to store temporary files')
@@ -31,5 +30,4 @@ if __name__ == '__main__':
     pyfoal.from_file_to_file(args.audio,
                              args.text,
                              args.output_file,
-                             args.htk_directory,
                              args.tmpdir)
