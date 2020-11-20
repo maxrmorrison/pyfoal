@@ -68,8 +68,6 @@ pyfoal.align(..., tmpdir='/path/to/store/tmp/files/')
 pyfoal.from_file(..., tmpdir='/path/to/store/tmp/files/')
 ```
 
-All temporary files are automatically removed after use.
-
 
 ##### Command-line interface
 TODO - document CLI
