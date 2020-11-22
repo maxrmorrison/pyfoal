@@ -12,9 +12,18 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     # Required arguments
-    parser.add_argument('audio', help='The audio file to process')
-    parser.add_argument('text', help='The corresponding transcript file')
-    parser.add_argument('output_file', help='The file to save the alignment')
+    parser.add_argument(
+        'audio',
+        n_args='+',
+        help='The audio files to process')
+    parser.add_argument(
+        'text',
+        n_args='+',
+        help='The corresponding transcript files')
+    parser.add_argument(
+        'output_file',
+        n_args='+',
+        help='The files to save the alignments')
 
     # Optional arguments
     parser.add_argument('--tmpdir', help='Directory to store temporary files')
@@ -27,7 +36,7 @@ if __name__ == '__main__':
     args = parse_args()
 
     # Generate alignment and save to disk
-    pyfoal.from_file_to_file(args.audio,
-                             args.text,
-                             args.output_file,
-                             args.tmpdir)
+    pyfoal.from_files_to_files(args.audio,
+                               args.text,
+                               args.output_file,
+                               args.tmpdir)
