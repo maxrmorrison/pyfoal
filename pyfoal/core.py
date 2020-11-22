@@ -1,3 +1,5 @@
+import functools
+import multiprocessing as mp
 import os
 import shutil
 import string
@@ -8,6 +10,7 @@ from pathlib import Path
 
 import g2p_en
 import pypar
+import torchaudio
 
 import pyfoal
 
@@ -98,6 +101,24 @@ def from_file_to_file(audio_file,
     """
     # Align and save
     from_file(audio_file, text_file, tmpdir).save(output_file)
+
+
+def from_files_to_files(audio_files, text_files, output_files, tmpdir=None):
+    """Perform parallel phoneme alignment from many files and save to disk
+
+    Arguments
+        audio_files : string
+            The audio files to process
+        text_files : string
+            The corresponding transcript files
+        output_files : string
+            The files to save the alignment
+        tmpdir : string or None
+            Directory to save temporary values. If None, uses system default.
+    """
+    with mp.Pool() as pool:
+        align_fn = functools.partial(from_file_to_file, tmpdir=tmpdir)
+        pool.starmap(align_fn, zip(audio_files, text_files, output_files))
 
 
 ###############################################################################
