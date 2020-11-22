@@ -14,15 +14,15 @@ def parse_args():
     # Required arguments
     parser.add_argument(
         'audio',
-        n_args='+',
+        nargs='+',
         help='The audio files to process')
     parser.add_argument(
         'text',
-        n_args='+',
+        nargs='+',
         help='The corresponding transcript files')
     parser.add_argument(
-        'output_file',
-        n_args='+',
+        'output',
+        nargs='+',
         help='The files to save the alignments')
 
     # Optional arguments
