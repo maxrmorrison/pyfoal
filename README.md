@@ -9,7 +9,7 @@ Relative to the original implementation, this repo provides the following.
    punctuation
  - Direct integration with [`pypar`](https://github.com/maxrmorrison/pypar),
    a feature-rich phoneme alignment representation.
- - No data races when using multiprocessing
+ - Support for multiprocessing
  - Clean, documented code
 
 
@@ -54,21 +54,40 @@ alignment = pyfoal.align(audio, sample_rate, text)
 ##### Force-align audio and text from files
 
 ```
+# Return the resulting alignment
 alignment = pyfoal.from_file(audio_file, text_file)
+
+# Save alignment to json
+pyfoal.from_file_to_file(audio_file, text_file, output_file)
 ```
+
+If you need to align many files, use `from_files_to_files`, which accepts
+lists of files and uses multiprocessing.
 
 
 ##### Specifying where to store temporary files
 
 By default, `pyfoal` will write temporary data to a system default location
-determined by the built-in `tempfile` module. You can override this location as
-follows.
-
-```
-pyfoal.align(..., tmpdir='/path/to/store/tmp/files/')
-pyfoal.from_file(..., tmpdir='/path/to/store/tmp/files/')
-```
+determined by the built-in `tempfile` module. You can override this location by
+specifying the `tmpdir` argument in any of the above functions.
 
 
 ##### Command-line interface
-TODO - document CLI
+
+```
+usage: python -m pyfoal
+    [-h]
+    [--tmpdir TMPDIR]
+    audio [audio ...]
+    text [text ...]
+    output_file [output_file ...]
+
+positional arguments:
+    audio            The audio files to process
+    text             The corresponding transcript files
+    output           The files to save the alignments
+
+optional arguments:
+    -h, --help       show this help message and exit
+    --tmpdir TMPDIR  Directory to store temporary files
+```
