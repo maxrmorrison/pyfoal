@@ -24,6 +24,7 @@ redistribution, so you must install HTK yourself and verify that the commands
 HTK, I use the following for installation on Linux.
 
 ```
+sudo apt-get install gcc-multilib libx11-dev
 ./configure --disable-hslab
 make all
 make install

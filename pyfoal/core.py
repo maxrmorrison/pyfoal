@@ -6,11 +6,11 @@ import string
 import subprocess
 import tempfile
 import uuid
-from pathlib import Path
 
 import g2p_en
 import pypar
 import torchaudio
+import tqdm
 
 import pyfoal
 
@@ -20,7 +20,7 @@ import pyfoal
 ###############################################################################
 
 
-ASSETS_DIR = Path(__file__).parent / 'assets'
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
 SAMPLE_RATE = 16000
 
 
@@ -116,9 +116,13 @@ def from_files_to_files(audio_files, text_files, output_files, tmpdir=None):
         tmpdir : string or None
             Directory to save temporary values. If None, uses system default.
     """
-    with mp.Pool() as pool:
-        align_fn = functools.partial(from_file_to_file, tmpdir=tmpdir)
-        pool.starmap(align_fn, zip(audio_files, text_files, output_files))
+    # with mp.Pool() as pool:
+    #     align_fn = functools.partial(from_file_to_file, tmpdir=tmpdir)
+    #     pool.starmap(align_fn, zip(audio_files, text_files, output_files))
+    iterator = zip(audio_files, text_files, output_files)
+    iterator = tqdm.tqdm(iterator, desc='pyfoal', dynamic_ncols=True)
+    for audio_file, text_file, output_file in iterator:
+        from_file_to_file(audio_file, text_file, output_file, tmpdir=tmpdir)
 
 
 ###############################################################################
@@ -131,10 +135,10 @@ class Aligner:
 
     def __init__(self):
         """Aligner constructor"""
-        self.hcopy = ASSETS_DIR / 'config'
-        self.macros = ASSETS_DIR / 'macros'
-        self.model = ASSETS_DIR / 'hmmdefs'
-        self.monophones = ASSETS_DIR / 'monophones'
+        self.hcopy = os.path.join(ASSETS_DIR, 'config')
+        self.macros = os.path.join(ASSETS_DIR, 'macros')
+        self.model = os.path.join(ASSETS_DIR, 'hmmdefs')
+        self.monophones = os.path.join(ASSETS_DIR, 'monophones')
 
         punctuation = [s for s in string.punctuation + '”“—' if s != '-']
         self.punctuation_table = str.maketrans('-', ' ', ''.join(punctuation))

@@ -16,4 +16,4 @@ def audio(file, audio):
         audio : torch.tensor(shape=(1, samples))
             The audio to save
     """
-    torchaudio.save(audiofile, audio, pyfoal.SAMPLE_RATE)
+    torchaudio.save(file, audio, pyfoal.SAMPLE_RATE)
