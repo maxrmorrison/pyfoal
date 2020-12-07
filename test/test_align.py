@@ -11,8 +11,11 @@ import pyfoal
 def test_align():
     """Test forced alignment"""
     alignment = pyfoal.from_file(path('test.wav'), path('test.txt'))
-    # TODO - assertions
-    import pdb; pdb.set_trace()
+    assert len(alignment) == 19
+    assert len(alignment.phonemes()) == 55
+    assert alignment.start() == 0.
+    assert.alignment.end() == 5.41
+    assert alignment.duration() == 5.41
 
 
 ###############################################################################
