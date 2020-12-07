@@ -14,7 +14,7 @@ def test_align():
     assert len(alignment) == 19
     assert len(alignment.phonemes()) == 55
     assert alignment.start() == 0.
-    assert.alignment.end() == 5.41
+    assert alignment.end() == 5.41
     assert alignment.duration() == 5.41
 
 
