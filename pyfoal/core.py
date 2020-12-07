@@ -116,13 +116,9 @@ def from_files_to_files(audio_files, text_files, output_files, tmpdir=None):
         tmpdir : string or None
             Directory to save temporary values. If None, uses system default.
     """
-    with mp.Pool() as pool:
+    with mp.get_context('spawn').Pool() as pool:
         align_fn = functools.partial(from_file_to_file, tmpdir=tmpdir)
         pool.starmap(align_fn, zip(audio_files, text_files, output_files))
-    # iterator = zip(audio_files, text_files, output_files)
-    # iterator = tqdm.tqdm(iterator, desc='pyfoal', dynamic_ncols=True)
-    # for audio_file, text_file, output_file in iterator:
-    #     from_file_to_file(audio_file, text_file, output_file, tmpdir=tmpdir)
 
 
 ###############################################################################
