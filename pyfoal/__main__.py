@@ -41,5 +41,5 @@ if __name__ == '__main__':
     # Generate alignment and save to disk
     pyfoal.from_files_to_files(args.audio,
                                args.text,
-                               args.output_file,
+                               args.output,
                                args.tmpdir)
