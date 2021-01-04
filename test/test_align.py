@@ -26,11 +26,7 @@ def test_align():
         alignment = pypar.Alignment(file)
 
     # Error check alignment
-    assert len(alignment) == 18
-    assert len(alignment.phonemes()) == 54
-    assert alignment.start() == 0.
-    assert alignment.end() == 5.429931972789116
-    assert alignment.duration() == 5.429931972789116
+    assert alignment == pypar.Alignment(path('test.json'))
 
 
 ###############################################################################
