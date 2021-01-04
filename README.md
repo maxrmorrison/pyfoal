@@ -1,5 +1,9 @@
 # Python forced alignment
 
+[![PyPI](https://img.shields.io/pypi/v/torchcrepe.svg)](https://pypi.python.org/pypi/pyfoal)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+<!-- [![Downloads](https://pepy.tech/badge/torchcrepe)](https://pepy.tech/project/pypar) -->
+
 This is a modified implementation of the Penn Phonetic Forced Aligner (P2FA)
 [1]. Relative to the original implementation, this repo provides the following.
  - Support for Python 3
