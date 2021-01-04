@@ -49,7 +49,8 @@ Clone this repo and run `pip install -e pyfoal/`.
 alignment = pyfoal.align(text, audio, sample_rate)
 ```
 
-`audio` must be a 1D numpy array.
+`text` is a string containing the speech transcript.
+`audio` is a 1D numpy array containing the speech audio.
 
 
 ##### Force-align from files
