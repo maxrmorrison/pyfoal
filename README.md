@@ -17,9 +17,9 @@ This is a modified implementation of the Penn Phonetic Forced Aligner (P2FA)
  - Clean, documented code
 
 
-### Installation
+## Installation
 
-##### Hidden Markov Model Toolkit (HTK)
+### Hidden Markov Model Toolkit (HTK)
 `pyfoal` depends on [HTK](http://htk.eng.cam.ac.uk/) and has been
 tested on Mac OS and Linux using HTK version 3.4.0. There are known issues in
 using version 3.4.1 on Linux. HTK is released under a license that prohibits
@@ -39,15 +39,15 @@ For more help with HTK installation, see notes by
 [Steve Rubin](https://github.com/ucbvislab/p2fa-vislab#install-htk-34-note-341-will-not-work-get-htk-here).
 
 
-##### Python dependencies
+### Python dependencies
 
 Clone this repo and run `pip install -e pyfoal/`.
 
 
-### Usage
+## Usage
 
 
-##### Force-align text and audio
+### Force-align text and audio
 
 ```
 alignment = pyfoal.align(text, audio, sample_rate)
@@ -57,7 +57,7 @@ alignment = pyfoal.align(text, audio, sample_rate)
 `audio` is a 1D numpy array containing the speech audio.
 
 
-##### Force-align from files
+### Force-align from files
 
 ```
 # Return the resulting alignment
@@ -71,7 +71,7 @@ If you need to align many files, use `from_files_to_files`, which accepts
 lists of files and uses multiprocessing.
 
 
-##### Command-line interface
+### Command-line interface
 
 ```
 usage: python -m pyfoal
@@ -91,7 +91,7 @@ optional arguments:
 ```
 
 
-### References
+## References
 [1] J. Yuan and M. Liberman, “Speaker identification on the scotus
 corpus,” Journal of the Acoustical Society of America, vol. 123, p.
 3878, 2008.
