@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import pyfoal
 
@@ -13,23 +14,23 @@ def parse_args():
 
     # Required arguments
     parser.add_argument(
-        '--audio',
-        nargs='+',
-        required=True,
-        help='The audio files to process')
-    parser.add_argument(
         '--text',
         nargs='+',
         required=True,
-        help='The corresponding transcript files')
+        type=Path,
+        help='The speech transcript files')
+    parser.add_argument(
+        '--audio',
+        nargs='+',
+        required=True,
+        type=Path,
+        help='The speech audio files')
     parser.add_argument(
         '--output',
         nargs='+',
         required=True,
-        help='The files to save the alignments')
-
-    # Optional arguments
-    parser.add_argument('--tmpdir', help='Directory to store temporary files')
+        type=Path,
+        help='The json files to save the alignments')
 
     return parser.parse_args()
 
@@ -39,7 +40,4 @@ if __name__ == '__main__':
     args = parse_args()
 
     # Generate alignment and save to disk
-    pyfoal.from_files_to_files(args.audio,
-                               args.text,
-                               args.output,
-                               args.tmpdir)
+    pyfoal.from_files_to_files(args.text, args.audio, args.output)

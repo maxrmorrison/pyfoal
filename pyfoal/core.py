@@ -1,16 +1,14 @@
 import functools
 import multiprocessing as mp
-import os
-import shutil
 import string
 import subprocess
 import tempfile
-import uuid
+from pathlib import Path
 
 import g2p_en
 import pypar
-import torchaudio
-import tqdm
+import resampy
+import soundfile
 
 import pyfoal
 
@@ -20,8 +18,8 @@ import pyfoal
 ###############################################################################
 
 
-ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
-SAMPLE_RATE = 16000
+ASSETS_DIR = Path(__file__).parent / 'assets'
+SAMPLE_RATE = 11025
 
 
 ###############################################################################
@@ -29,18 +27,16 @@ SAMPLE_RATE = 16000
 ###############################################################################
 
 
-def align(audio, sample_rate, text, tmpdir=None):
+def align(text, audio, sample_rate):
     """Phoneme-level forced-alignment with HTK
 
     Arguments
-        audio : torch.tensor(shape=(1, time))
+        text : string
+            The speech transcript
+        audio : np.array(shape=(samples,))
             The speech signal to process
         sample_rate : int
             The audio sampling rate
-        text : string
-            The corresponding transcript
-        tmpdir : string or None
-            Directory to save temporary values. If None, uses system default.
 
     Returns
         alignment : Alignment
@@ -48,77 +44,69 @@ def align(audio, sample_rate, text, tmpdir=None):
     """
     # Maybe resample
     if sample_rate != SAMPLE_RATE:
-        audio = torchaudio.transforms.Resample(sample_rate, SAMPLE_RATE)(audio)
+        audio = resampy.resample(audio, sample_rate, SAMPLE_RATE)
 
     # Cache aligner
     if not hasattr(align, 'aligner'):
         align.aligner = Aligner()
 
     # Perform forced alignment
-    return align.aligner(audio, text, tmpdir)
+    return align.aligner(text, audio)
 
 
-def from_file(audio_file, text_file, tmpdir=None):
+def from_file(text_file, audio_file):
     """Phoneme alignment from audio and text files
 
     Arguments
-        audio_file : string
-            The audio file to process
-        text_file : string
+        text_file : Path
             The corresponding transcript file
-        tmpdir : string or None
-            Directory to save temporary values. If None, uses system default.
+        audio_file : Path
+            The audio file to process
 
     Returns
         alignment : Alignment
             The forced alignment
     """
-    # Load audio
-    audio = pyfoal.load.audio(audio_file)
-
     # Load text
-    text = pyfoal.load.text(text_file)
+    with open(text_file) as file:
+        text = file.read()
+
+    # Load audio
+    audio, sample_rate = soundfile.read(audio_file)
 
     # Align
-    return align(audio, SAMPLE_RATE, text, tmpdir)
+    return align(text, audio, sample_rate)
 
 
-def from_file_to_file(audio_file,
-                      text_file,
-                      output_file,
-                      tmpdir=None):
+def from_file_to_file(text_file, audio_file, output_file):
     """Perform phoneme alignment from files and save to disk
 
     Arguments
-        audio_file : string
-            The audio file to process
-        text_file : string
+        text_file : Path
             The corresponding transcript file
-        output_file : string
+        audio_file : Path
+            The audio file to process
+        output_file : Path
             The file to save the alignment
-        tmpdir : string or None
-            Directory to save temporary values. If None, uses system default.
     """
     # Align and save
-    from_file(audio_file, text_file, tmpdir).save(output_file)
+    from_file(text_file, audio_file).save(output_file)
 
 
-def from_files_to_files(audio_files, text_files, output_files, tmpdir=None):
+def from_files_to_files(text_files, audio_files, output_files):
     """Perform parallel phoneme alignment from many files and save to disk
 
     Arguments
-        audio_files : string
-            The audio files to process
-        text_files : string
-            The corresponding transcript files
-        output_files : string
-            The files to save the alignment
-        tmpdir : string or None
-            Directory to save temporary values. If None, uses system default.
+        text_files : list
+            The transcript files
+        audio_files : list
+            The corresponding speech audio files
+        output_files : list
+            The files to save the alignments
     """
     with mp.get_context('spawn').Pool() as pool:
-        align_fn = functools.partial(from_file_to_file, tmpdir=tmpdir)
-        pool.starmap(align_fn, zip(audio_files, text_files, output_files))
+        align_fn = functools.partial(from_file_to_file)
+        pool.starmap(align_fn, zip(text_files, audio_files, output_files))
 
 
 ###############################################################################
@@ -131,73 +119,84 @@ class Aligner:
 
     def __init__(self):
         """Aligner constructor"""
-        self.hcopy = os.path.join(ASSETS_DIR, 'config')
-        self.macros = os.path.join(ASSETS_DIR, 'macros')
-        self.model = os.path.join(ASSETS_DIR, 'hmmdefs')
-        self.monophones = os.path.join(ASSETS_DIR, 'monophones')
+        self.hcopy = ASSETS_DIR / 'config'
+        self.macros = ASSETS_DIR / 'macros'
+        self.model = ASSETS_DIR / 'hmmdefs'
+        self.monophones = ASSETS_DIR / 'monophones'
 
         punctuation = [s for s in string.punctuation + '”“—' if s != '-']
         self.punctuation_table = str.maketrans('-', ' ', ''.join(punctuation))
 
-    def __call__(self, audio, text, tmpdir=None):
+    def __call__(self, text, audio):
         """Retrieve the forced alignment"""
-        if tmpdir is None:
-            tmpdir = os.path.join(tempfile.gettempdir(), 'pyfoal')
-
-        # Use a unique directory on each call to allow multiprocessing
-        tmpdir = os.path.join(tmpdir, str(uuid.uuid4()))
-
-        # Make sure directory exists
-        os.makedirs(tmpdir, exist_ok=True)
-
-        try:
+        # Alignment artifacts are placed in temporary storage and cleaned-up
+        # after alignment is complete
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
 
             # HTK script path
-            script_file = os.path.join(tmpdir, 'test.scp')
+            script_file = directory / 'test.scp'
 
             # Preprocess
-            self.format(tmpdir, audio, script_file)
+            self.format(directory, audio, script_file)
 
             # Remove characters we can't handle
             text = self.lint(text)
 
-            output_file = os.path.join(tmpdir, 'alignment.mlf')
-
             # Run alignment model
-            self.viterbi(self.write_words(tmpdir, text),
-                         self.write_pronunciation(tmpdir, text),
-                         tmpdir,
+            alignment_file = directory / 'alignment.mlf'
+            self.viterbi(self.write_words(directory, text),
+                         self.write_pronunciation(directory, text),
+                         directory,
                          script_file,
-                         output_file)
+                         alignment_file)
 
-            # Retrieve alignment from file
-            return pypar.Alignment(output_file)
+            # Alignment rate and offset correction
+            alignment = self.correct_alignment(alignment_file,
+                                               audio.size / SAMPLE_RATE)
 
-        finally:
-
-            # Remove intermediate features
-            shutil.rmtree(tmpdir)
+        return alignment
 
     ###########################################################################
     # Utilities
     ###########################################################################
 
-    def format(self, tmpdir, audio, script_file):
+    def correct_alignment(self, alignment_file, duration):
+        """Correct alignment rate and offset"""
+        # Load alignment
+        alignment = pypar.Alignment(alignment_file)
+
+        # Retrieve phoneme durations
+        durations = [p.duration() for p in alignment.phonemes()]
+
+        # Constant offset and rate correction
+        durations[0] += .0125
+        durations = [d * 11000. / 11025. for d in durations]
+
+        # End at audio duration
+        durations[-1] = duration - sum(durations[:-1])
+
+        # Update alignment durations
+        alignment.update(durations=durations)
+
+        return alignment
+
+    def format(self, directory, audio, script_file):
         """Write HTK arguments and convert data to HTK format"""
         # Save audio to disk
-        audiofile = os.path.join(tmpdir, 'sound.wav')
-        pyfoal.save.audio(audiofile, audio)
+        audiofile = directory / 'sound.wav'
+        soundfile.write(audiofile, audio, SAMPLE_RATE)
 
         # Save HTK process metadata
-        code_file = os.path.join(tmpdir, 'codetr.scp')
-        plp_file = os.path.join(tmpdir, 'tmp.plp')
+        code_file = directory / 'codetr.scp'
+        plp_file = directory / 'tmp.plp'
         with open(code_file, 'w') as file:
-            file.write(audiofile + ' ' + plp_file + '\n')
+            file.write(f'{audiofile} {plp_file}\n')
         with open(script_file, 'w') as file:
-            file.write(plp_file + '\n')
+            file.write(f'{plp_file}\n')
 
         # HTK preprocessing call
-        subprocess.call(
+        subprocess.Popen(
             ['HCopy', '-T', '1', '-C', self.hcopy, '-S', code_file],
             stdout=subprocess.DEVNULL)
 
@@ -233,16 +232,22 @@ class Aligner:
 
         return words
 
-    def viterbi(self, words, dictionary, tmpdir, script_file, output):
+    def viterbi(self, words, dictionary, directory, script_file, output):
         """Run viterbi decoding to align"""
-        output_file = os.path.join(tmpdir, 'aligned.results')
-        os.system(
-            'HVite -T 1 -a -m -I ' + words + ' -H ' + self.macros + ' -H ' + \
-            self.model + ' -S ' + script_file + ' -i ' + output + \
-            ' -p 0.0 -s 5.0 ' + dictionary + ' ' + self.monophones + ' > ' + \
-            output_file + ' 2>&1')
+        args = ['HVite', '-T', '1', '-a', '-m',
+                '-I', words,
+                '-H', self.macros,
+                '-H', self.model,
+                '-S', script_file,
+                '-i', output,
+                '-p', '0.',
+                '-s', '5.',
+                dictionary,
+                self.monophones]
+        with open(directory / 'aligned.results', 'w') as file:
+            subprocess.Popen(args, stdout=file).wait()
 
-    def write_pronunciation(self, tmpdir, text):
+    def write_pronunciation(self, directory, text):
         """Write the pronunciation dictionary"""
         # Grapheme-to-phoneme conversion
         phonemes = g2p_en.G2p()(text)
@@ -253,16 +258,16 @@ class Aligner:
         lines.append('sp  sp\n')
 
         # Write HTK dictionary
-        filename = os.path.join(tmpdir, 'dictionary')
+        filename = directory / 'dictionary'
         with open(filename, 'w') as file:
             for line in sorted(lines):
                 file.write(line)
 
         return filename
 
-    def write_words(self, tmpdir, text):
+    def write_words(self, directory, text):
         """Write the mlf file containing the words to align"""
-        filename = os.path.join(tmpdir, 'tmp.mlf')
+        filename = directory / 'tmp.mlf'
         with open(filename, 'w') as file:
 
             # File header
@@ -272,7 +277,7 @@ class Aligner:
             # Write words with spaces in between
             for word in text.upper().split():
                 file.write('sp\n')
-                file.write(word + '\n')
+                file.write(f'{word}\n')
 
             file.write('sp\n')
 

@@ -1,4 +1,7 @@
-import os
+import tempfile
+from pathlib import Path
+
+import pypar
 
 import pyfoal
 
@@ -10,12 +13,24 @@ import pyfoal
 
 def test_align():
     """Test forced alignment"""
-    alignment = pyfoal.from_file(path('test.wav'), path('test.txt'))
-    assert len(alignment) == 19
-    assert len(alignment.phonemes()) == 55
+    # Align to file in temporary directory
+    with tempfile.TemporaryDirectory() as directory:
+        file = Path(directory) / 'test.json'
+
+        # Align
+        pyfoal.from_files_to_files([path('test.txt')],
+                                   [path('test.wav')],
+                                   [file])
+
+        # Load alignment
+        alignment = pypar.Alignment(file)
+
+    # Error check alignment
+    assert len(alignment) == 18
+    assert len(alignment.phonemes()) == 54
     assert alignment.start() == 0.
-    assert alignment.end() == 5.41
-    assert alignment.duration() == 5.41
+    assert alignment.end() == 5.429931972789116
+    assert alignment.duration() == 5.429931972789116
 
 
 ###############################################################################
@@ -24,5 +39,5 @@ def test_align():
 
 
 def path(file):
-    """Load test assets"""
-    return os.path.join(os.path.dirname(__file__), 'assets', file)
+    """Test asset path name resolution"""
+    return Path(__file__).parent / 'assets' / file
