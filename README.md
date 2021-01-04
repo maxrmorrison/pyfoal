@@ -20,7 +20,7 @@ This is a modified implementation of the Penn Phonetic Forced Aligner (P2FA)
 ### Installation
 
 ##### Hidden Markov Model Toolkit (HTK)
-`pyfoal` depends on the [HTK](http://htk.eng.cam.ac.uk/) and has been
+`pyfoal` depends on [HTK](http://htk.eng.cam.ac.uk/) and has been
 tested on Mac OS and Linux using HTK version 3.4.0. There are known issues in
 using version 3.4.1 on Linux. HTK is released under a license that prohibits
 redistribution, so you must install HTK yourself and verify that the commands
