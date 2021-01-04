@@ -43,7 +43,7 @@ Clone this repo and run `pip install -e pyfoal/`.
 ### Usage
 
 
-##### Force-align audio and text from loaded audio and text
+##### Force-align text and audio
 
 ```
 alignment = pyfoal.align(text, audio, sample_rate)
@@ -52,7 +52,7 @@ alignment = pyfoal.align(text, audio, sample_rate)
 `audio` must be a 1D numpy array.
 
 
-##### Force-align audio and text from files
+##### Force-align from files
 
 ```
 # Return the resulting alignment
