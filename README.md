@@ -1,7 +1,7 @@
 # Python forced alignment
 
-This is a modified implementation of the Penn Phonetic Forced Aligner (P2FA).
-Relative to the original implementation, this repo provides the following.
+This is a modified implementation of the Penn Phonetic Forced Aligner (P2FA)
+[1]. Relative to the original implementation, this repo provides the following.
  - Support for Python 3
  - Support for performing forced alignment both in Python and on the
    command-line
@@ -9,7 +9,7 @@ Relative to the original implementation, this repo provides the following.
    punctuation
  - Direct integration with [`pypar`](https://github.com/maxrmorrison/pypar),
    a feature-rich phoneme alignment representation.
- - Support for multiprocessing
+ - Multiprocessing for quickly aligning speech datasets
  - Clean, documented code
 
 
@@ -24,10 +24,10 @@ redistribution, so you must install HTK yourself and verify that the commands
 HTK, I use the following for installation on Linux.
 
 ```
-sudo apt-get install gcc-multilib libx11-dev
+sudo apt-get install -y gcc-multilib libx11-dev
 ./configure --disable-hslab
 make all
-make install
+sudo make install
 ```
 
 For more help with HTK installation, see notes by
@@ -46,31 +46,24 @@ Clone this repo and run `pip install -e pyfoal/`.
 ##### Force-align audio and text from loaded audio and text
 
 ```
-alignment = pyfoal.align(audio, sample_rate, text)
+alignment = pyfoal.align(text, audio, sample_rate)
 ```
 
-`audio` must be a `torch.tensor` with shape `(1, samples)`.
+`audio` must be a 1D numpy array.
 
 
 ##### Force-align audio and text from files
 
 ```
 # Return the resulting alignment
-alignment = pyfoal.from_file(audio_file, text_file)
+alignment = pyfoal.from_file(text_file, audio_file)
 
 # Save alignment to json
-pyfoal.from_file_to_file(audio_file, text_file, output_file)
+pyfoal.from_file_to_file(text_file, audio_file, output_file)
 ```
 
 If you need to align many files, use `from_files_to_files`, which accepts
 lists of files and uses multiprocessing.
-
-
-##### Specifying where to store temporary files
-
-By default, `pyfoal` will write temporary data to a system default location
-determined by the built-in `tempfile` module. You can override this location by
-specifying the `tmpdir` argument in any of the above functions.
 
 
 ##### Command-line interface
@@ -78,17 +71,22 @@ specifying the `tmpdir` argument in any of the above functions.
 ```
 usage: python -m pyfoal
     [-h]
-    [--tmpdir TMPDIR]
-    audio [audio ...]
-    text [text ...]
-    output_file [output_file ...]
-
-positional arguments:
-    audio            The audio files to process
-    text             The corresponding transcript files
-    output           The files to save the alignments
+    --text TEXT [TEXT ...]
+    --audio AUDIO [AUDIO ...]
+    --output OUTPUT [OUTPUT ...]
 
 optional arguments:
-    -h, --help       show this help message and exit
-    --tmpdir TMPDIR  Directory to store temporary files
+  -h, --help            show this help message and exit
+  --text TEXT [TEXT ...]
+                        The speech transcript files
+  --audio AUDIO [AUDIO ...]
+                        The speech audio files
+  --output OUTPUT [OUTPUT ...]
+                        The json files to save the alignments
 ```
+
+
+### References
+[1] J. Yuan and M. Liberman, “Speaker identification on the scotus
+corpus,” Journal of the Acoustical Society of America, vol. 123, p.
+3878, 2008.
