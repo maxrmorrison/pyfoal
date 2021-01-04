@@ -1,6 +1,6 @@
 # Python forced alignment
 
-[![PyPI](https://img.shields.io/pypi/v/torchcrepe.svg)](https://pypi.python.org/pypi/pyfoal)
+[![PyPI](https://img.shields.io/pypi/v/pypar.svg)](https://pypi.python.org/pypi/pyfoal)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 <!-- [![Downloads](https://pepy.tech/badge/torchcrepe)](https://pepy.tech/project/pypar) -->
 
