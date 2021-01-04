@@ -49,7 +49,7 @@ Clone this repo and run `pip install -e pyfoal/`.
 
 ### Force-align text and audio
 
-```
+```python
 alignment = pyfoal.align(text, audio, sample_rate)
 ```
 
@@ -59,7 +59,7 @@ alignment = pyfoal.align(text, audio, sample_rate)
 
 ### Force-align from files
 
-```
+```python
 # Return the resulting alignment
 alignment = pyfoal.from_file(text_file, audio_file)
 
@@ -88,6 +88,16 @@ optional arguments:
                         The speech audio files
   --output OUTPUT [OUTPUT ...]
                         The json files to save the alignments
+```
+
+
+## Tests
+
+Tests can be run as follows.
+
+```
+pip install pytest
+pytest
 ```
 
 
