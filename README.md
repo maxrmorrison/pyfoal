@@ -41,7 +41,7 @@ For more help with HTK installation, see notes by
 
 ### Python dependencies
 
-Clone this repo and run `pip install -e pyfoal/`.
+`pip install pyfoal`
 
 
 ## Usage
