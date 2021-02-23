@@ -12,8 +12,7 @@ setup(
     author='Max Morrison',
     author_email='maxrmorrison@gmail.com',
     url='https://github.com/maxrmorrison/pyfoal',
-    # TODO - pypar
-    install_requires=['g2p_en', 'resampy', 'soundfile'],
+    install_requires=['g2p_en', 'pypar', 'resampy', 'soundfile'],
     packages=['pyfoal'],
     package_data={'pyfoal': ['assets/*']},
     long_description=long_description,
