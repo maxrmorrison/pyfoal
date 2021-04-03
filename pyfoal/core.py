@@ -42,6 +42,8 @@ def align(text, audio, sample_rate):
         alignment : Alignment
             The forced alignment
     """
+    duration = len(audio) / sample_rate
+
     # Maybe resample
     if sample_rate != SAMPLE_RATE:
         audio = resampy.resample(audio, sample_rate, SAMPLE_RATE)
@@ -51,7 +53,7 @@ def align(text, audio, sample_rate):
         align.aligner = Aligner()
 
     # Perform forced alignment
-    return align.aligner(text, audio)
+    return align.aligner(text, audio, duration)
 
 
 def from_file(text_file, audio_file):
@@ -127,7 +129,7 @@ class Aligner:
         punctuation = [s for s in string.punctuation + '”“—' if s != '-']
         self.punctuation_table = str.maketrans('-', ' ', ''.join(punctuation))
 
-    def __call__(self, text, audio):
+    def __call__(self, text, audio, duration):
         """Retrieve the forced alignment"""
         # Alignment artifacts are placed in temporary storage and cleaned-up
         # after alignment is complete
@@ -152,8 +154,7 @@ class Aligner:
                          alignment_file)
 
             # Alignment rate and offset correction
-            alignment = self.correct_alignment(alignment_file,
-                                               audio.size / SAMPLE_RATE)
+            alignment = self.correct_alignment(alignment_file, duration)
 
         return alignment
 
