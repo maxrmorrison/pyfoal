@@ -14,7 +14,7 @@ def phoneme_to_index(phoneme):
             phoneme: i for i, phoneme in enumerate(pyfoal.load.phonemes())}
 
     # Convert
-    return phoneme_to_index.map[phoneme]
+    return phoneme_to_index.map[str(phoneme)]
 
 
 def index_to_phoneme(index):

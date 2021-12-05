@@ -21,6 +21,6 @@ def phonemes():
     # Cache phonemes
     if not hasattr(phonemes, 'phonemes'):
         with open(pyfoal.ASSETS_DIR / 'monophones') as file:
-            phonemes.phonemes = file.readlines()
+            phonemes.phonemes = [line.rstrip() for line in file.readlines()]
 
     return phonemes.phonemes
