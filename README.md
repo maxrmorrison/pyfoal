@@ -29,6 +29,7 @@ HTK, I use the following for installation on Linux.
 
 ```
 sudo apt-get install -y gcc-multilib libx11-dev
+sudo chmod +x configure
 ./configure --disable-hslab
 make all
 sudo make install
