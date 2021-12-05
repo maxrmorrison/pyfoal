@@ -1,5 +1,6 @@
 import functools
 import multiprocessing as mp
+from os import putenv
 import string
 import subprocess
 import tempfile
@@ -44,9 +45,8 @@ def align(text, audio, sample_rate):
     """
     duration = len(audio) / sample_rate
 
-    # Maybe resample
-    if sample_rate != SAMPLE_RATE:
-        audio = resampy.resample(audio, sample_rate, SAMPLE_RATE)
+    # Resample
+    audio = resample(audio, sample_rate)
 
     # Cache aligner
     if not hasattr(align, 'aligner'):
@@ -74,10 +74,10 @@ def from_file(text_file, audio_file):
         text = file.read()
 
     # Load audio
-    audio, sample_rate = soundfile.read(audio_file)
+    audio = pyfoal.load.audio(audio_file)
 
     # Align
-    return align(text, audio, sample_rate)
+    return align(text, audio, SAMPLE_RATE)
 
 
 def from_file_to_file(text_file, audio_file, output_file):
@@ -283,3 +283,15 @@ class Aligner:
             file.write('sp\n')
 
         return filename
+
+
+###############################################################################
+# Utilities
+###############################################################################
+
+
+def resample(audio, sample_rate):
+    """Resample audio"""
+    if sample_rate != SAMPLE_RATE:
+        return resampy.resample(audio, sample_rate, SAMPLE_RATE)
+    return audio
