@@ -1,6 +1,5 @@
 import functools
 import multiprocessing as mp
-from os import putenv
 import string
 import subprocess
 import tempfile
@@ -19,7 +18,14 @@ import pyfoal
 ###############################################################################
 
 
-ASSETS_DIR = Path(__file__).parent / 'assets'
+# The aligner to use. One of ['htk'].
+# TODO - add MFA
+ALIGNER = 'htk'
+
+# The location of the aligner model and phoneme dictionary
+ASSETS_DIR = Path(__file__).parent / 'assets' / ALIGNER
+
+# The audio sampling rate
 SAMPLE_RATE = 11025
 
 
@@ -29,7 +35,7 @@ SAMPLE_RATE = 11025
 
 
 def align(text, audio, sample_rate):
-    """Phoneme-level forced-alignment with HTK
+    """Phoneme-level forced-alignment
 
     Arguments
         text : string

@@ -1,3 +1,7 @@
+import itertools
+
+import pypar
+
 import pyfoal
 
 
@@ -26,3 +30,25 @@ def index_to_phoneme(index):
 
     # Convert
     return index_to_phoneme.map[index]
+
+
+def indices_to_alignment(indices, hopsize):
+    """Convert framewise phoneme indices to a phoneme alignment"""
+    # Get consecutive index identities and times in seconds
+    groups = [
+        (index, hopsize * sum(1 for _ in group))
+        for index, group in itertools.groupby(indices)]
+
+    # Create phonemes
+    start = 0.
+    phonemes = []
+    for index, duration in groups:
+        phonemes.append(
+            pypar.Phoneme(index_to_phoneme(index)),
+            start,
+            start + duration)
+        start += duration
+
+    # We don't have word break information, so we assume one word
+    return pypar.Alignment([pypar.Word(phonemes)])
+
