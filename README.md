@@ -4,23 +4,34 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://pepy.tech/badge/pyfoal)](https://pepy.tech/project/pyfoal)
 
-This is a modified implementation of the Penn Phonetic Forced Aligner (P2FA)
-[1]. Relative to the original implementation, this repo provides the following.
- - Support for Python 3
- - Support for performing forced alignment both in Python and on the
-   command-line
- - Fewer alignment failures due to, e.g., out-of-vocabulary (OOV) words or
-   punctuation
- - Direct integration with [`pypar`](https://github.com/maxrmorrison/pypar),
-   a feature-rich phoneme alignment representation.
- - Multiprocessing for quickly aligning speech datasets
- - Clean, documented code
+Forced alignment suite. Includes English grapheme-to-phoneme (G2P) and
+phoneme alignment from the following forced alignment tools.
+ - Montreal Forced Aligner (MFA) [1]
+ - Penn Phonetic Forced Aligner (P2FA) [2]
+
+Alignments can be saved to disk or accessed via the
+`pypar.Alignment` representation. See
+[`pypar`](https://github.com/maxrmorrison/pypar) for more details.
 
 
 ## Installation
 
-### Hidden Markov Model Toolkit (HTK)
-`pyfoal` depends on [HTK](http://htk.eng.cam.ac.uk/) and has been
+First, install the Python dependencies in a new Conda environment
+
+`pip install pyfoal`
+
+Next, perform the necessary installation of either MFA or P2FA.
+
+
+### Montreal Forced Aligner (MFA)
+
+`conda install -c conda-forge montreal-forced-aligner`
+
+
+### Penn Phonetic Forced Aligner (P2FA)
+
+P2FA depends on the
+[Hidden Markov Model Toolkit (HTK)](http://htk.eng.cam.ac.uk/), which has been
 tested on Mac OS and Linux using HTK version 3.4.0. There are known issues in
 using version 3.4.1 on Linux. HTK is released under a license that prohibits
 redistribution, so you must install HTK yourself and verify that the commands
@@ -103,6 +114,11 @@ pytest
 
 
 ## References
+
 [1] J. Yuan and M. Liberman, “Speaker identification on the scotus
 corpus,” Journal of the Acoustical Society of America, vol. 123, p.
 3878, 2008.
+
+[2] M. McAuliffe, , M. Socolof, S. Mihuc, M. Wagner, and M. Sonderegger,
+"Montreal Forced Aligner: Trainable Text-Speech Alignment Using Kaldi,"
+Interspeech, vol. 2017, p. 498-502. 2017.

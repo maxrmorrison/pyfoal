@@ -189,6 +189,18 @@ def from_files_to_files(
 
 
 @contextlib.contextmanager
+def backend(aligner):
+    """Change which forced aligner is used"""
+    global ALIGNER
+    previous_aligner = ALIGNER
+    try:
+        ALIGNER = aligner
+        yield
+    finally:
+        ALIGNER = previous_aligner
+
+
+@contextlib.contextmanager
 def chdir(directory):
     """Context manager for changing the current working directory"""
     curr_dir = os.getcwd()
