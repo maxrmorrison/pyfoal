@@ -11,22 +11,25 @@ import pyfoal
 ###############################################################################
 
 
-def test_align():
+def test_align_p2fa():
     """Test forced alignment"""
-    # Align to file in temporary directory
-    with tempfile.TemporaryDirectory() as directory:
-        file = Path(directory) / 'test.json'
+    with pyfoal.backend('p2fa'):
 
-        # Align
-        pyfoal.from_files_to_files([path('test.txt')],
-                                   [path('test.wav')],
-                                   [file])
+        # Align to file in temporary directory
+        with tempfile.TemporaryDirectory() as directory:
+            file = Path(directory) / 'test.json'
 
-        # Load alignment
-        alignment = pypar.Alignment(file)
+            # Align
+            pyfoal.from_files_to_files(
+                [path('test.txt')],
+                [path('test.wav')],
+                [file])
 
-    # Error check alignment
-    assert alignment == pypar.Alignment(path('test.json'))
+            # Load alignment
+            alignment = pypar.Alignment(file)
+
+        # Error check alignment
+        assert alignment == pypar.Alignment(path('test.json'))
 
 
 ###############################################################################
