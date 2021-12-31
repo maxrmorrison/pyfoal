@@ -15,8 +15,9 @@ MFA is used by default. Alignments can be saved to disk or accessed via the
 
 `pyfoal` also includes the following
  - Converting alignments to and from a categorical representation
-   suitable for training machine learning models
+   suitable for training machine learning models (`pyfoal.convert`)
  - Natural interpolation of forced alignments for time-stretching speech
+   (`pyfoal.interpolate`)
 
 
 ## Installation
