@@ -1,21 +1,11 @@
 import csv
 
-import soundfile
-
 import pyfoal
 
 
 ###############################################################################
 # Loading
 ###############################################################################
-
-
-def audio(file):
-    """Load audio from file"""
-    audio, sample_rate = soundfile.read(file)
-
-    # Resample
-    return pyfoal.resample(audio, sample_rate)
 
 
 def phonemes():
