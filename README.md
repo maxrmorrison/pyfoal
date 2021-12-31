@@ -10,8 +10,13 @@ phoneme alignment from the following forced alignment tools.
  - Penn Phonetic Forced Aligner (P2FA) [2]
 
 MFA is used by default. Alignments can be saved to disk or accessed via the
-`pypar.Alignment` representation. See
+`pypar.Alignment` phoneme alignment representation. See
 [`pypar`](https://github.com/maxrmorrison/pypar) for more details.
+
+`pyfoal` also includes the following
+ - Converting alignments to and from a categorical representation
+   suitable for training machine learning models
+ - Natural interpolation of forced alignments for time-stretching speech
 
 
 ## Installation
@@ -109,6 +114,7 @@ usage: python -m pyfoal
     --audio AUDIO [AUDIO ...]
     --output OUTPUT [OUTPUT ...]
     [--num_workers NUM_WORKERS]
+    [--backend BACKEND]
 
 optional arguments:
     -h, --help          show this help message and exit
@@ -120,6 +126,8 @@ optional arguments:
                         The json files to save the alignments
     --num_workers NUM_WORKERS
                         Number of CPU cores to utilize. Defaults to all cores.
+    --backend BACKEND
+                        The aligner to use. One of ['mfa' (default), 'p2fa'].
 ```
 
 

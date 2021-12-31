@@ -12,9 +12,14 @@ def phonemes():
     """Load list of phonemes"""
     # Cache phonemes
     if not hasattr(phonemes, 'phonemes'):
-        with open(pyfoal.ASSETS_DIR / 'monophones') as file:
-            phonemes.phonemes = [line.rstrip() for line in file.readlines()]
+        with open(pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'phonemes.csv') as file:
+            reader = csv.reader(file)
 
+            # Skip header
+            next(reader)
+
+            # Get phonemes
+            phonemes.phonemes = [row[0] for row in reader]
     return phonemes.phonemes
 
 
@@ -22,7 +27,7 @@ def voicing():
     """Load a map that indicates whether each phoneme is voiced"""
     # Cache voicing
     if not hasattr(voicing, 'voicing'):
-        with open(pyfoal.ASSETS_DIR / 'phonemes.csv') as file:
+        with open(pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'phonemes.csv') as file:
             reader = csv.reader(file)
 
             # Skip header
@@ -37,7 +42,7 @@ def vowels():
     """Load a map that indicates whether each phoneme is a vowel"""
     # Cache vowels
     if not hasattr(vowels, 'vowels'):
-        with open(pyfoal.ASSETS_DIR / 'phonemes.csv') as file:
+        with open(pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'phonemes.csv') as file:
             reader = csv.reader(file)
 
             # Skip header

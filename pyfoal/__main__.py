@@ -35,6 +35,10 @@ def parse_args():
         '--num_workers',
         type=int,
         help='Number of CPU cores to utilize. Defaults to all cores.')
+    parser.add_argument(
+        '--backend',
+        default='mfa',
+        help='The aligner to use. One of [\'mfa\' (default), \'p2fa\'].')
 
     return parser.parse_args()
 
@@ -43,9 +47,12 @@ if __name__ == '__main__':
     # Parse command-line arguments
     args = parse_args()
 
-    # Generate alignment and save to disk
-    pyfoal.from_files_to_files(
-        args.text,
-        args.audio,
-        args.output,
-        args.num_workers)
+    # Select aligner
+    with pyfoal.backend(args.backend):
+
+        # Generate alignment and save to disk
+        pyfoal.from_files_to_files(
+            args.text,
+            args.audio,
+            args.output,
+            args.num_workers)

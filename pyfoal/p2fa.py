@@ -20,10 +20,10 @@ class Aligner:
 
     def __init__(self):
         """Aligner constructor"""
-        self.hcopy = pyfoal.ASSETS_DIR / 'config'
-        self.macros = pyfoal.ASSETS_DIR / 'macros'
-        self.model = pyfoal.ASSETS_DIR / 'hmmdefs'
-        self.monophones = pyfoal.ASSETS_DIR / 'monophones'
+        self.hcopy = pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'config'
+        self.macros = pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'macros'
+        self.model = pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'hmmdefs'
+        self.monophones = pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'monophones'
 
         punctuation = [s for s in string.punctuation + '”“—' if s != '-']
         self.punctuation_table = str.maketrans('-', ' ', ''.join(punctuation))
