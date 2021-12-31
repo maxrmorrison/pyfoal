@@ -1,5 +1,4 @@
-import itertools
-
+import numpy as np
 import pypar
 
 import pyfoal
@@ -8,6 +7,23 @@ import pyfoal
 ###############################################################################
 # Conversion functions
 ###############################################################################
+
+
+def alignment_to_indices(alignment, hopsize, return_word_breaks=False):
+    """Convert alignment to framewise phoneme indices"""
+    # Get phonemes at regular time intervals
+    times = np.arange(0, alignment.duration(), hopsize)
+    phonemes = [alignment.phoneme_at_time(time) for time in times]
+
+    # Convert to integers
+    indices = [phoneme_to_index(p) for p in phonemes]
+
+    # Maybe return word break locations to recover alignment
+    if return_word_breaks:
+        word_breaks = [(str(word), word.start()) for word in alignment]
+        return indices, word_breaks
+
+    return indices
 
 
 def phoneme_to_index(phoneme):
@@ -32,23 +48,47 @@ def index_to_phoneme(index):
     return index_to_phoneme.map[index]
 
 
-def indices_to_alignment(indices, hopsize):
+def indices_to_alignment(indices, hopsize, word_breaks=None):
     """Convert framewise phoneme indices to a phoneme alignment"""
-    # Get consecutive index identities and times in seconds
-    groups = [
-        (index, hopsize * sum(1 for _ in group))
-        for index, group in itertools.groupby(indices)]
 
-    # Create phonemes
+    # If no word breaks are given, populate an empty word
+    if word_breaks is None:
+        word_breaks = [('', 0.)]
+
+    # Determine word split indices
+    word_break_indices = [
+        (word, int(time / hopsize)) for word, time in word_breaks]
+
+    # Iterate over frames
+    j = 0
     start = 0.
-    phonemes = []
-    for index, duration in groups:
-        phonemes.append(
-            pypar.Phoneme(index_to_phoneme(index)),
-            start,
-            start + duration)
-        start += duration
+    previous = -1
+    words, phonemes = [], []
+    for i, index in enumerate(indices):
 
-    # We don't have word break information, so we assume one word
-    return pypar.Alignment([pypar.Word(phonemes)])
+        if previous != -1:
 
+            # Maybe start a new word
+            if j < len(word_breaks) - 1 and i == word_break_indices[j + 1][1]:
+                end = i * hopsize
+                phonemes.append(
+                    pypar.Phoneme(index_to_phoneme(previous), start, end))
+                words.append(pypar.Word(word_break_indices[j][0], phonemes))
+                start = end
+                j += 1
+
+            # Maybe start a new phoneme
+            elif index != previous:
+                end = i * hopsize
+                phonemes.append(
+                    pypar.Phoneme(index_to_phoneme(previous), start, end))
+                start = end
+
+        previous = index
+
+    # Write last word
+    end = len(indices) / hopsize
+    phonemes.append(pypar.Phoneme(index_to_phoneme(previous), start, end))
+    words.append(pypar.Word(word_break_indices[-1][0], phonemes))
+
+    return pypar.Alignment(words)

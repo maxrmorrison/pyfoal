@@ -31,6 +31,10 @@ def parse_args():
         required=True,
         type=Path,
         help='The json files to save the alignments')
+    parser.add_argument(
+        '--num_workers',
+        type=int,
+        help='Number of CPU cores to utilize. Defaults to all cores.')
 
     return parser.parse_args()
 
@@ -40,4 +44,8 @@ if __name__ == '__main__':
     args = parse_args()
 
     # Generate alignment and save to disk
-    pyfoal.from_files_to_files(args.text, args.audio, args.output)
+    pyfoal.from_files_to_files(
+        args.text,
+        args.audio,
+        args.output,
+        args.num_workers)
