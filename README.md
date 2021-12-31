@@ -108,12 +108,18 @@ usage: python -m pyfoal
     --text TEXT [TEXT ...]
     --audio AUDIO [AUDIO ...]
     --output OUTPUT [OUTPUT ...]
+    [--num_workers NUM_WORKERS]
 
 optional arguments:
-    -h, --help                   show this help message and exit
-    --text TEXT [TEXT ...]       The speech transcript files
-    --audio AUDIO [AUDIO ...]    The speech audio files
-    --output OUTPUT [OUTPUT ...] The json files to save the alignments
+    -h, --help          show this help message and exit
+    --text TEXT [TEXT ...]
+                        The speech transcript files
+    --audio AUDIO [AUDIO ...]
+                        The speech audio files
+    --output OUTPUT [OUTPUT ...]
+                        The json files to save the alignments
+    --num_workers NUM_WORKERS
+                        Number of CPU cores to utilize. Defaults to all cores.
 ```
 
 
