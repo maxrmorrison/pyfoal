@@ -9,7 +9,7 @@ phoneme alignment from the following forced alignment tools.
  - Montreal Forced Aligner (MFA) [1]
  - Penn Phonetic Forced Aligner (P2FA) [2]
 
-Alignments can be saved to disk or accessed via the
+MFA is used by default. Alignments can be saved to disk or accessed via the
 `pypar.Alignment` representation. See
 [`pypar`](https://github.com/maxrmorrison/pypar) for more details.
 
@@ -82,6 +82,23 @@ pyfoal.from_file_to_file(text_file, audio_file, output_file)
 If you need to align many files, use `from_files_to_files`, which accepts
 lists of files and uses multiprocessing.
 
+```python
+# Align many files at once
+# num_workers is the number of parallel jobs
+pyfoal.from_files_to_files(text_files, audio_files, output_files, num_workers)
+```
+
+
+### Changing backend to use P2FA
+
+```python
+# Change backend
+with pyfoal.backend('p2fa'):
+
+    # Perform alignment
+    alignment = pyfoal.align(text, audio, sample_rate)
+```
+
 
 ### Command-line interface
 
@@ -93,13 +110,10 @@ usage: python -m pyfoal
     --output OUTPUT [OUTPUT ...]
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --text TEXT [TEXT ...]
-                        The speech transcript files
-  --audio AUDIO [AUDIO ...]
-                        The speech audio files
-  --output OUTPUT [OUTPUT ...]
-                        The json files to save the alignments
+    -h, --help                   show this help message and exit
+    --text TEXT [TEXT ...]       The speech transcript files
+    --audio AUDIO [AUDIO ...]    The speech audio files
+    --output OUTPUT [OUTPUT ...] The json files to save the alignments
 ```
 
 

@@ -18,14 +18,14 @@ import pyfoal
 ###############################################################################
 
 
-# The aligner to use. One of ['htk', 'mfa'].
+# The aligner to use. One of ['p2fa', 'mfa'].
 ALIGNER = 'mfa'
 
 # The location of the aligner model and phoneme dictionary
 ASSETS_DIR = Path(__file__).parent / 'assets' / ALIGNER
 
-# The default audio sampling rate of HTK
-HTK_SAMPLE_RATE = 11025
+# The default audio sampling rate of P2FA
+P2FA_SAMPLE_RATE = 11025
 
 
 ###############################################################################
@@ -48,12 +48,12 @@ def align(text, audio, sample_rate):
         alignment : Alignment
             The forced alignment
     """
-    if ALIGNER == 'htk':
+    if ALIGNER == 'p2fa':
         duration = len(audio) / sample_rate
 
         # Maybe resample
-        if sample_rate != HTK_SAMPLE_RATE:
-            resampy.resample(audio, sample_rate, HTK_SAMPLE_RATE)
+        if sample_rate != P2FA_SAMPLE_RATE:
+            resampy.resample(audio, sample_rate, P2FA_SAMPLE_RATE)
 
         # Cache aligner
         if not hasattr(align, 'aligner'):
@@ -138,9 +138,9 @@ def from_files_to_files(
         num_workers : int
             Number of CPU cores to utilize. Defaults to all cores.
     """
-    if ALIGNER == 'htk':
+    if ALIGNER == 'p2fa':
 
-        # Launch multiprocessed HTK alignment
+        # Launch multiprocessed P2FA alignment
         with mp.get_context('spawn').Pool(num_workers) as pool:
             align_fn = functools.partial(from_file_to_file)
             pool.starmap(align_fn, zip(text_files, audio_files, output_files))
@@ -178,7 +178,8 @@ def from_files_to_files(
                     directory /
                     audio_file.parent.name /
                     f'{audio_file.stem}.TextGrid')
-                shutil.copyfile(textgrid_file, output_file)
+                alignment = pypar.Alignment(textgrid_file)
+                alignment.save(output_file)
     else:
         raise ValueError(f'Aligner {ALIGNER} is not defined')
 
