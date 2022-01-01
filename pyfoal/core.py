@@ -14,21 +14,6 @@ import pyfoal
 
 
 ###############################################################################
-# Constants
-###############################################################################
-
-
-# The aligner to use. One of ['p2fa', 'mfa'].
-ALIGNER = 'mfa'
-
-# The location of the aligner model and phoneme dictionary
-ASSETS_DIR = Path(__file__).parent / 'assets'
-
-# The default audio sampling rate of P2FA
-P2FA_SAMPLE_RATE = 11025
-
-
-###############################################################################
 # Forced alignment
 ###############################################################################
 
@@ -48,12 +33,12 @@ def align(text, audio, sample_rate):
         alignment : Alignment
             The forced alignment
     """
-    if ALIGNER == 'p2fa':
+    if pyfoal.ALIGNER == 'p2fa':
         duration = len(audio) / sample_rate
 
         # Maybe resample
-        if sample_rate != P2FA_SAMPLE_RATE:
-            resampy.resample(audio, sample_rate, P2FA_SAMPLE_RATE)
+        if sample_rate != pyfoal.P2FA_SAMPLE_RATE:
+            resampy.resample(audio, sample_rate, pyfoal.P2FA_SAMPLE_RATE)
 
         # Cache aligner
         if not hasattr(align, 'aligner'):
@@ -61,13 +46,13 @@ def align(text, audio, sample_rate):
 
         # Perform forced alignment
         return align.aligner(text, audio, duration)
-    elif ALIGNER == 'mfa':
+    elif pyfoal.ALIGNER == 'mfa':
 
         # Write to temporary storage
         with tempfile.TemporaryDirectory() as directory:
             with chdir(directory):
                 soundfile.write('audio.wav', audio, sample_rate)
-                with open('text.txt') as file:
+                with open('text.txt', 'w') as file:
                     file.write(text)
 
                 # Align
@@ -79,7 +64,7 @@ def align(text, audio, sample_rate):
                 # Load
                 return pypar.Alignment('alignment.TextGrid')
     else:
-        raise ValueError(f'Aligner {ALIGNER} is not defined')
+        raise ValueError(f'Aligner {pyfoal.ALIGNER} is not defined')
 
 
 def from_file(text_file, audio_file):
@@ -138,14 +123,17 @@ def from_files_to_files(
         num_workers : int
             Number of CPU cores to utilize. Defaults to all cores.
     """
-    if ALIGNER == 'p2fa':
+    # Default to using all cpus
+    num_workers = num_workers if num_workers else os.cpu_count()
+
+    if pyfoal.ALIGNER == 'p2fa':
 
         # Launch multiprocessed P2FA alignment
-        with mp.get_context('spawn').Pool(num_workers) as pool:
+        with mp.Pool(num_workers) as pool:
             align_fn = functools.partial(from_file_to_file)
             pool.starmap(align_fn, zip(text_files, audio_files, output_files))
 
-    elif ALIGNER == 'mfa':
+    elif pyfoal.ALIGNER == 'mfa':
 
         import montreal_forced_aligner as mfa
 
@@ -154,23 +142,25 @@ def from_files_to_files(
         mfa.command_line.model.download_model('acoustic', 'english')
 
         with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
 
             # Copy files to temporary directory, preserving speaker
             for audio_file, text_file in zip(audio_files, text_files):
-                shutil.copyfile(
-                    audio_file,
-                    directory / audio_file.parent.name / audio_file.name)
-                shutil.copyfile(
-                    text_file,
-                    directory / text_file.parent.name / text_file.name)
+                audio_directory = directory / audio_file.parent.name
+                audio_directory.mkdir(exist_ok=True, parents=True)
+                text_directory = directory / text_file.parent.name
+                text_directory.mkdir(exist_ok=True, parents=True)
+                shutil.copyfile(audio_file, audio_directory / audio_file.name)
+                shutil.copyfile(text_file, text_directory / text_file.name)
 
             # Align
             aligner = mfa.alignment.PretrainedAligner(
-                corpus_directory=directory,
+                corpus_directory=str(directory),
                 dictionary_path='english',
                 acoustic_model_path='english',
                 num_jobs=num_workers)
             aligner.align()
+            aligner.export_files(directory)
 
             # Copy alignments to destination
             for audio_file, output_file in zip(audio_files, output_files):
@@ -181,7 +171,7 @@ def from_files_to_files(
                 alignment = pypar.Alignment(textgrid_file)
                 alignment.save(output_file)
     else:
-        raise ValueError(f'Aligner {ALIGNER} is not defined')
+        raise ValueError(f'Aligner {pyfoal.ALIGNER} is not defined')
 
 
 ###############################################################################
@@ -192,13 +182,12 @@ def from_files_to_files(
 @contextlib.contextmanager
 def backend(aligner):
     """Change which forced aligner is used"""
-    global ALIGNER
-    previous_aligner = ALIGNER
+    previous_aligner = getattr(pyfoal, 'ALIGNER')
     try:
-        ALIGNER = aligner
+        setattr(pyfoal, 'ALIGNER', aligner)
         yield
     finally:
-        ALIGNER = previous_aligner
+        setattr(pyfoal, 'ALIGNER', previous_aligner)
 
 
 @contextlib.contextmanager

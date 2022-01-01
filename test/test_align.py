@@ -1,4 +1,6 @@
+import importlib
 import tempfile
+import warnings
 from pathlib import Path
 
 import pypar
@@ -11,25 +13,28 @@ import pyfoal
 ###############################################################################
 
 
-def test_align_p2fa():
+def test_align():
     """Test forced alignment"""
-    with pyfoal.backend('p2fa'):
+    # Align to file in temporary directory
+    with tempfile.TemporaryDirectory() as directory:
 
-        # Align to file in temporary directory
-        with tempfile.TemporaryDirectory() as directory:
-            file = Path(directory) / 'test.json'
-
-            # Align
+        # Align using p2fa
+        with pyfoal.backend('p2fa'):
             pyfoal.from_files_to_files(
                 [path('test.txt')],
                 [path('test.wav')],
-                [file])
+                [Path(directory) / 'p2fa.json'])
+            _ = pypar.Alignment(Path(directory) / 'p2fa.json')
 
-            # Load alignment
-            alignment = pypar.Alignment(file)
-
-        # Error check alignment
-        assert alignment == pypar.Alignment(path('test.json'))
+        # Maybe align using mfa
+        if importlib.util.find_spec('montreal_forced_aligner') is not None:
+            pyfoal.from_files_to_files(
+                [path('test.txt')],
+                [path('test.wav')],
+                [Path(directory) / 'mfa.json'])
+            _ = pypar.Alignment(Path(directory) / 'mfa.json')
+        else:
+            warnings.warn('Could not load montreal forced aligner backend')
 
 
 ###############################################################################
