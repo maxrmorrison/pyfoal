@@ -1,5 +1,6 @@
 import contextlib
 import functools
+import logging
 import multiprocessing as mp
 import os
 import shutil
@@ -153,14 +154,21 @@ def from_files_to_files(
                 shutil.copyfile(audio_file, audio_directory / audio_file.name)
                 shutil.copyfile(text_file, text_directory / text_file.name)
 
-            # Align
-            aligner = mfa.alignment.PretrainedAligner(
-                corpus_directory=str(directory),
-                dictionary_path='english',
-                acoustic_model_path='english',
-                num_jobs=num_workers)
-            aligner.align()
-            aligner.export_files(directory)
+            # MFA generates a lot of log information we don't need
+            with disable_logging(logging.INFO):
+
+                # Setup aligner
+                aligner = mfa.alignment.PretrainedAligner(
+                    corpus_directory=str(directory),
+                    dictionary_path='english',
+                    acoustic_model_path='english',
+                    num_jobs=num_workers,
+                    debug=True,
+                    verbose=True)
+
+                # Align
+                aligner.align()
+                aligner.export_files(directory)
 
             # Copy alignments to destination
             for audio_file, output_file in zip(audio_files, output_files):
@@ -168,8 +176,13 @@ def from_files_to_files(
                     directory /
                     audio_file.parent.name /
                     f'{audio_file.stem}.TextGrid')
-                alignment = pypar.Alignment(textgrid_file)
-                alignment.save(output_file)
+
+                # The alignment can fail. This typically indicates that the
+                # transcript and audio do not match. We skip these files.
+                try:
+                    pypar.Alignment(textgrid_file).save(output_file)
+                except FileNotFoundError as error:
+                    pass
     else:
         raise ValueError(f'Aligner {pyfoal.ALIGNER} is not defined')
 
@@ -193,9 +206,19 @@ def backend(aligner):
 @contextlib.contextmanager
 def chdir(directory):
     """Context manager for changing the current working directory"""
-    curr_dir = os.getcwd()
+    previous_directory = os.getcwd()
     try:
         os.chdir(directory)
         yield
     finally:
-        os.chdir(curr_dir)
+        os.chdir(previous_directory)
+
+
+@contextlib.contextmanager
+def disable_logging(level):
+    """Context manager for changing the current log level of all loggers"""
+    try:
+        logging.disable(level)
+        yield
+    finally:
+        logging.disable(logging.NOTSET)

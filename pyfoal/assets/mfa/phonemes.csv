@@ -1,6 +1,6 @@
 phoneme, voiced, vowel
 <epsilon>, 0, 0
-AH, 1, 1
+AH0, 1, 1
 EY1, 1, 1
 Z, 1, 0
 B, 0, 0
@@ -70,3 +70,5 @@ ER2, 1, 0
 UH0, 1, 1
 UH2, 1, 1
 <unk>, 0, 0
+, 0, 0
+spn, 0, 0
