@@ -38,8 +38,8 @@ def align(text, audio, sample_rate):
         duration = len(audio) / sample_rate
 
         # Maybe resample
-        if sample_rate != pyfoal.P2FA_SAMPLE_RATE:
-            resampy.resample(audio, sample_rate, pyfoal.P2FA_SAMPLE_RATE)
+        if sample_rate != pyfoal.p2fa.SAMPLE_RATE:
+            resampy.resample(audio, sample_rate, pyfoal.p2fa.SAMPLE_RATE)
 
         # Cache aligner
         if not hasattr(align, 'aligner'):
@@ -52,18 +52,18 @@ def align(text, audio, sample_rate):
         # Write to temporary storage
         with tempfile.TemporaryDirectory() as directory:
             with chdir(directory):
-                soundfile.write('audio.wav', audio, sample_rate)
-                with open('text.txt', 'w') as file:
+                soundfile.write('item.wav', audio, sample_rate)
+                with open('item.txt', 'w') as file:
                     file.write(text)
 
                 # Align
                 from_files_to_files(
-                    [Path('text.txt')],
-                    [Path('audio.wav')],
-                    [Path('alignment.TextGrid')])
+                    [Path('item.txt').resolve()],
+                    [Path('item.wav').resolve()],
+                    [Path('item.TextGrid').resolve()])
 
                 # Load
-                return pypar.Alignment('alignment.TextGrid')
+                return pypar.Alignment('item.TextGrid')
     else:
         raise ValueError(f'Aligner {pyfoal.ALIGNER} is not defined')
 
@@ -147,12 +147,10 @@ def from_files_to_files(
 
             # Copy files to temporary directory, preserving speaker
             for audio_file, text_file in zip(audio_files, text_files):
-                audio_directory = directory / audio_file.parent.name
-                audio_directory.mkdir(exist_ok=True, parents=True)
-                text_directory = directory / text_file.parent.name
-                text_directory.mkdir(exist_ok=True, parents=True)
-                shutil.copyfile(audio_file, audio_directory / audio_file.name)
-                shutil.copyfile(text_file, text_directory / text_file.name)
+                speaker_directory = directory / audio_file.parent.name
+                speaker_directory.mkdir(exist_ok=True, parents=True)
+                shutil.copyfile(audio_file, speaker_directory / audio_file.name)
+                shutil.copyfile(text_file, speaker_directory / text_file.name)
 
             # MFA generates a lot of log information we don't need
             with disable_logging(logging.INFO):
@@ -181,7 +179,7 @@ def from_files_to_files(
                 # transcript and audio do not match. We skip these files.
                 try:
                     pypar.Alignment(textgrid_file).save(output_file)
-                except FileNotFoundError as error:
+                except FileNotFoundError:
                     pass
     else:
         raise ValueError(f'Aligner {pyfoal.ALIGNER} is not defined')

@@ -12,7 +12,7 @@ import pyfoal
 def alignment_to_indices(alignment, hopsize, return_word_breaks=False):
     """Convert alignment to framewise phoneme indices"""
     # Get phonemes at regular time intervals
-    times = np.arange(0, alignment.duration(), hopsize)
+    times = np.arange(0, alignment.duration() - 1e-10, hopsize)
     phonemes = [alignment.phoneme_at_time(time) for time in times]
 
     # Convert to integers

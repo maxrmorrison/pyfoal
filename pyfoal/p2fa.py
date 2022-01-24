@@ -11,6 +11,15 @@ import pyfoal
 
 
 ###############################################################################
+# P2FA constants
+###############################################################################
+
+
+# The sampling rate that P2FA uses
+SAMPLE_RATE = 11025
+
+
+###############################################################################
 # P2FA forced aligner
 ###############################################################################
 
@@ -85,7 +94,7 @@ class Aligner:
         """Write HTK arguments and convert data to HTK format"""
         # Save audio to disk
         audiofile = directory / 'sound.wav'
-        soundfile.write(audiofile, audio, pyfoal.P2FA_SAMPLE_RATE)
+        soundfile.write(audiofile, audio, SAMPLE_RATE)
 
         # Save HTK process metadata
         code_file = directory / 'codetr.scp'
