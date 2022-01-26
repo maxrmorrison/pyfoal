@@ -57,11 +57,6 @@ For more help with HTK installation, see notes by
 [Steve Rubin](https://github.com/ucbvislab/p2fa-vislab#install-htk-34-note-341-will-not-work-get-htk-here).
 
 
-### Python dependencies
-
-`pip install pyfoal`
-
-
 ## Usage
 
 
