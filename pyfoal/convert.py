@@ -50,7 +50,6 @@ def index_to_phoneme(index):
 
 def indices_to_alignment(indices, hopsize, word_breaks=None):
     """Convert framewise phoneme indices to a phoneme alignment"""
-
     # If no word breaks are given, populate an empty word
     if word_breaks is None:
         word_breaks = [('', 0.)]
