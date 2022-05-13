@@ -5,6 +5,7 @@ import multiprocessing as mp
 import os
 import shutil
 import tempfile
+import warnings
 from pathlib import Path
 
 import pypar
@@ -136,51 +137,59 @@ def from_files_to_files(
 
     elif pyfoal.ALIGNER == 'mfa':
 
-        import montreal_forced_aligner as mfa
+        try:
+            import montreal_forced_aligner as mfa
 
-        # Download english dictionary and acoustic model
-        mfa.command_line.model.download_model('dictionary', 'english')
-        mfa.command_line.model.download_model('acoustic', 'english')
+            # Download english dictionary and acoustic model
+            mfa.command_line.model.download_model('dictionary', 'english')
+            mfa.command_line.model.download_model('acoustic', 'english')
 
-        with tempfile.TemporaryDirectory() as directory:
-            directory = Path(directory)
+            with tempfile.TemporaryDirectory() as directory:
+                directory = Path(directory)
 
-            # Copy files to temporary directory, preserving speaker
-            for audio_file, text_file in zip(audio_files, text_files):
-                speaker_directory = directory / audio_file.parent.name
-                speaker_directory.mkdir(exist_ok=True, parents=True)
-                shutil.copyfile(audio_file, speaker_directory / audio_file.name)
-                shutil.copyfile(text_file, speaker_directory / text_file.name)
+                # Copy files to temporary directory, preserving speaker
+                with mp.Pool(num_workers) as pool:
+                    iterator = zip(
+                        [directory] * len(text_files),
+                        text_files,
+                        audio_files)
+                    pool.starmap(mfa_copy_and_convert, iterator)
 
-            # MFA generates a lot of log information we don't need
-            with disable_logging(logging.INFO):
+                # MFA generates a lot of log information we don't need
+                with disable_logging(logging.CRITICAL):
 
-                # Setup aligner
-                aligner = mfa.alignment.PretrainedAligner(
-                    corpus_directory=str(directory),
-                    dictionary_path='english',
-                    acoustic_model_path='english',
-                    num_jobs=num_workers,
-                    debug=True,
-                    verbose=True)
+                    # Setup aligner
+                    aligner = mfa.alignment.PretrainedAligner(
+                        corpus_directory=str(directory),
+                        dictionary_path='english',
+                        acoustic_model_path='english',
+                        num_jobs=num_workers,
+                        debug=False,
+                        verbose=False)
 
-                # Align
-                aligner.align()
-                aligner.export_files(directory)
+                    # Align
+                    aligner.align()
 
-            # Copy alignments to destination
-            for audio_file, output_file in zip(audio_files, output_files):
-                textgrid_file = (
-                    directory /
-                    audio_file.parent.name /
-                    f'{audio_file.stem}.TextGrid')
+                    # Export alignments
+                    aligner.export_files(directory)
 
-                # The alignment can fail. This typically indicates that the
-                # transcript and audio do not match. We skip these files.
-                try:
-                    pypar.Alignment(textgrid_file).save(output_file)
-                except FileNotFoundError:
-                    pass
+                # Copy alignments to destination
+                for audio_file, output_file in zip(audio_files, output_files):
+                    textgrid_file = (
+                        directory /
+                        audio_file.parent.name /
+                        f'{audio_file.stem}.TextGrid')
+
+                    # The alignment can fail. This typically indicates that the
+                    # transcript and audio do not match. We skip these files.
+                    try:
+                        pypar.Alignment(textgrid_file).save(output_file)
+                    except FileNotFoundError:
+                        warnings.warn(
+                            'MFA failed to align. Maybe retry with P2FA.')
+
+        except Exception as error:
+            warnings.warn(f'pyfoal - MFA failed with {error}')
     else:
         raise ValueError(f'Aligner {pyfoal.ALIGNER} is not defined')
 
@@ -210,6 +219,21 @@ def chdir(directory):
         yield
     finally:
         os.chdir(previous_directory)
+
+
+def mfa_copy_and_convert(directory, text_file, audio_file):
+    """Prepare text and audio files for MFA alignment"""
+    speaker_directory = directory / audio_file.parent.name
+    speaker_directory.mkdir(exist_ok=True, parents=True)
+    shutil.copyfile(text_file, speaker_directory / text_file.name)
+
+    # Aligning fails if the audio is not a 16-bit mono wav file, so
+    # we convert instead of copy
+    audio, sample_rate = soundfile.read(audio_file)
+    soundfile.write(
+        speaker_directory / f'{audio_file.stem}.wav',
+        audio,
+        sample_rate)
 
 
 @contextlib.contextmanager
