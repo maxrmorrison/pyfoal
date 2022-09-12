@@ -11,16 +11,18 @@ import pyfoal
 def phonemes():
     """Load list of phonemes"""
     # Cache phonemes
-    if not hasattr(phonemes, 'phonemes'):
+    if not hasattr(phonemes, pyfoal.ALIGNER):
         with open(pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'phonemes.csv') as file:
             reader = csv.reader(file)
 
             # Skip header
             next(reader)
 
-            # Get phonemes
-            phonemes.phonemes = [row[0] for row in reader]
-    return phonemes.phonemes
+            # Update cache
+            setattr(phonemes, pyfoal.ALIGNER, [row[0] for row in reader])
+
+    # Get phonemes
+    return getattr(phonemes, pyfoal.ALIGNER)
 
 
 def voicing():
