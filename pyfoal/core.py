@@ -131,7 +131,7 @@ def from_files_to_files(
     if pyfoal.ALIGNER == 'p2fa':
 
         # Launch multiprocessed P2FA alignment
-        with mp.Pool(num_workers) as pool:
+        with mp.get_context('spawn').Pool(num_workers) as pool:
             align_fn = functools.partial(from_file_to_file)
             pool.starmap(align_fn, zip(text_files, audio_files, output_files))
 
@@ -171,7 +171,7 @@ def from_files_to_files(
                     aligner.align()
 
                     # Export alignments
-                    aligner.export_files(directory)
+                    aligner.export_files(str(directory))
 
                 # Copy alignments to destination
                 for audio_file, output_file in zip(audio_files, output_files):
