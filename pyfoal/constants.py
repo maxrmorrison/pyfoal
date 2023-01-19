@@ -6,8 +6,5 @@ from pathlib import Path
 ###############################################################################
 
 
-# The aligner to use. One of ['p2fa', 'mfa'].
-ALIGNER = 'mfa'
-
-# The location of the aligner model and phoneme dictionary
+# The location of the aligner models and phoneme dictionaries
 ASSETS_DIR = Path(__file__).parent / 'assets'

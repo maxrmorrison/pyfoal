@@ -1,16 +1,5 @@
 import contextlib
-import functools
-import logging
-import multiprocessing as mp
 import os
-import shutil
-import tempfile
-import warnings
-from pathlib import Path
-
-import pypar
-import resampy
-import soundfile
 
 import pyfoal
 
@@ -20,7 +9,13 @@ import pyfoal
 ###############################################################################
 
 
-def align(text, audio, sample_rate):
+def align(
+    text,
+    audio,
+    sample_rate,
+    aligner=pyfoal.DEFAULT_ALIGNER,
+    checkpoint=pyfoal.DEFAULT_CHECKPOINT,
+    gpu=None):
     """Phoneme-level forced-alignment
 
     Arguments
@@ -35,41 +30,32 @@ def align(text, audio, sample_rate):
         alignment : Alignment
             The forced alignment
     """
-    if pyfoal.ALIGNER == 'p2fa':
-        duration = len(audio) / sample_rate
+    # Montreal forced aligner
+    if aligner == 'mfa':
+        return pyfoal.aligners.mfa.align(text, audio, sample_rate)
 
-        # Maybe resample
-        if sample_rate != pyfoal.p2fa.SAMPLE_RATE:
-            resampy.resample(audio, sample_rate, pyfoal.p2fa.SAMPLE_RATE)
+    # Penn phonetic forced aligner
+    if aligner == 'p2fa':
+        return pyfoal.aligners.p2fa.align(text, audio, sample_rate)
 
-        # Cache aligner
-        if not hasattr(align, 'aligner'):
-            align.aligner = pyfoal.p2fa.Aligner()
+    # RAD-TTS neural alignment
+    if aligner == 'radtts':
+        return pyfoal.aligners.radtts.align(
+            text,
+            audio,
+            sample_rate,
+            checkpoint,
+            gpu)
 
-        # Perform forced alignment
-        return align.aligner(text, audio, duration)
-    elif pyfoal.ALIGNER == 'mfa':
-
-        # Write to temporary storage
-        with tempfile.TemporaryDirectory() as directory:
-            with chdir(directory):
-                soundfile.write('item.wav', audio, sample_rate)
-                with open('item.txt', 'w') as file:
-                    file.write(text)
-
-                # Align
-                from_files_to_files(
-                    [Path('item.txt').resolve()],
-                    [Path('item.wav').resolve()],
-                    [Path('item.TextGrid').resolve()])
-
-                # Load
-                return pypar.Alignment('item.TextGrid')
-    else:
-        raise ValueError(f'Aligner {pyfoal.ALIGNER} is not defined')
+    raise ValueError(f'Aligner {aligner} is not defined')
 
 
-def from_file(text_file, audio_file):
+def from_file(
+    text_file,
+    audio_file,
+    aligner=pyfoal.DEFAULT_ALIGNER,
+    checkpoint=pyfoal.DEFAULT_CHECKPOINT,
+    gpu=None):
     """Phoneme alignment from audio and text files
 
     Arguments
@@ -77,23 +63,43 @@ def from_file(text_file, audio_file):
             The corresponding transcript file
         audio_file : Path
             The audio file to process
+        aligner : str
+            The alignment method to use
+        checkpoint : Path
+            The checkpoint to use for neural methods
+        gpu : int
+            The index of the gpu to perform alignment on for neural methods
 
     Returns
         alignment : Alignment
             The forced alignment
     """
-    # Load text
-    with open(text_file) as file:
-        text = file.read()
+    # Montreal forced aligner
+    if aligner == 'mfa':
+        return pyfoal.aligners.mfa.from_file(text_file, audio_file)
 
-    # Load audio
-    audio, sample_rate = soundfile.read(audio_file)
+    # Penn phonetic forced aligner
+    if aligner == 'p2fa':
+        return pyfoal.aligners.p2fa.from_file(text_file, audio_file)
+        
+    # RAD-TTS neural alignment
+    if aligner == 'radtts':
+        return pyfoal.aligners.radtts.from_file(
+            text_file,
+            audio_file,
+            checkpoint,
+            gpu)
 
-    # Align
-    return align(text, audio, sample_rate)
+    raise ValueError(f'Aligner {aligner} is not defined')
 
 
-def from_file_to_file(text_file, audio_file, output_file):
+def from_file_to_file(
+    text_file,
+    audio_file,
+    output_file,
+    aligner=pyfoal.DEFAULT_ALIGNER,
+    checkpoint=pyfoal.DEFAULT_CHECKPOINT,
+    gpu=None):
     """Perform phoneme alignment from files and save to disk
 
     Arguments
@@ -103,16 +109,47 @@ def from_file_to_file(text_file, audio_file, output_file):
             The audio file to process
         output_file : Path
             The file to save the alignment
+        aligner : str
+            The alignment method to use
+        checkpoint : Path
+            The checkpoint to use for neural methods
+        gpu : int
+            The index of the gpu to perform alignment on for neural methods
     """
-    # Align and save
-    from_file(text_file, audio_file).save(output_file)
+    # Montreal forced aligner
+    if aligner == 'mfa':
+        pyfoal.aligners.mfa.from_file_to_file(
+            text_file,
+            audio_file,
+            output_file)
+
+    # Penn phonetic forced aligner
+    elif aligner == 'p2fa':
+        pyfoal.aligners.p2fa.from_file_to_file(
+            text_file,
+            audio_file,
+            output_file)
+        
+    # RAD-TTS neural alignment
+    elif aligner == 'radtts':
+        pyfoal.aligners.radtts.from_file_to_file(
+            text_file,
+            audio_file,
+            output_file,
+            checkpoint,
+            gpu)
+
+    raise ValueError(f'Aligner {aligner} is not defined')
 
 
 def from_files_to_files(
     text_files,
     audio_files,
     output_files,
-    num_workers=None):
+    aligner=pyfoal.DEFAULT_ALIGNER,
+    num_workers=None,
+    checkpoint=pyfoal.DEFAULT_CHECKPOINT,
+    gpu=None):
     """Perform parallel phoneme alignment from many files and save to disk
 
     Arguments
@@ -122,92 +159,46 @@ def from_files_to_files(
             The corresponding speech audio files
         output_files : list
             The files to save the alignments
+        aligner : str
+            The alignment method to use
         num_workers : int
             Number of CPU cores to utilize. Defaults to all cores.
+        checkpoint : Path
+            The checkpoint to use for neural methods
+        gpu : int
+            The index of the gpu to perform alignment on for neural methods
     """
-    # Default to using all cpus
-    num_workers = num_workers if num_workers else os.cpu_count()
+    # Montreal forced aligner
+    if aligner == 'mfa':
+        pyfoal.aligners.mfa.from_files_to_files(
+            text_files,
+            audio_files,
+            output_files,
+            num_workers)
 
-    if pyfoal.ALIGNER == 'p2fa':
+    # Penn phonetic forced aligner
+    elif aligner == 'p2fa':
+        pyfoal.aligners.p2fa.from_files_to_files(
+            text_files,
+            audio_files,
+            output_files,
+            num_workers)
+        
+    # RAD-TTS neural alignment
+    elif aligner == 'radtts':
+        pyfoal.aligners.radtts.from_files_to_files(
+            text_files,
+            audio_files,
+            output_files,
+            checkpoint,
+            gpu)
 
-        # Launch multiprocessed P2FA alignment
-        with mp.get_context('spawn').Pool(num_workers) as pool:
-            align_fn = functools.partial(from_file_to_file)
-            pool.starmap(align_fn, zip(text_files, audio_files, output_files))
-
-    elif pyfoal.ALIGNER == 'mfa':
-
-        try:
-            import montreal_forced_aligner as mfa
-
-            # Download english dictionary and acoustic model
-            mfa.command_line.model.download_model('dictionary', 'english')
-            mfa.command_line.model.download_model('acoustic', 'english')
-
-            with tempfile.TemporaryDirectory() as directory:
-                directory = Path(directory)
-
-                # Copy files to temporary directory, preserving speaker
-                with mp.Pool(num_workers) as pool:
-                    iterator = zip(
-                        [directory] * len(text_files),
-                        text_files,
-                        audio_files)
-                    pool.starmap(mfa_copy_and_convert, iterator)
-
-                # MFA generates a lot of log information we don't need
-                with disable_logging(logging.CRITICAL):
-
-                    # Setup aligner
-                    aligner = mfa.alignment.PretrainedAligner(
-                        corpus_directory=str(directory),
-                        dictionary_path='english',
-                        acoustic_model_path='english',
-                        num_jobs=num_workers,
-                        debug=False,
-                        verbose=False)
-
-                    # Align
-                    aligner.align()
-
-                    # Export alignments
-                    aligner.export_files(str(directory))
-
-                # Copy alignments to destination
-                for audio_file, output_file in zip(audio_files, output_files):
-                    textgrid_file = (
-                        directory /
-                        audio_file.parent.name /
-                        f'{audio_file.stem}.TextGrid')
-
-                    # The alignment can fail. This typically indicates that the
-                    # transcript and audio do not match. We skip these files.
-                    try:
-                        pypar.Alignment(textgrid_file).save(output_file)
-                    except FileNotFoundError:
-                        warnings.warn(
-                            'MFA failed to align. Maybe retry with P2FA.')
-
-        except Exception as error:
-            warnings.warn(f'pyfoal - MFA failed with {error}')
-    else:
-        raise ValueError(f'Aligner {pyfoal.ALIGNER} is not defined')
+    raise ValueError(f'Aligner {aligner} is not defined')
 
 
 ###############################################################################
 # Utilities
 ###############################################################################
-
-
-@contextlib.contextmanager
-def backend(aligner):
-    """Change which forced aligner is used"""
-    previous_aligner = getattr(pyfoal, 'ALIGNER')
-    try:
-        setattr(pyfoal, 'ALIGNER', aligner)
-        yield
-    finally:
-        setattr(pyfoal, 'ALIGNER', previous_aligner)
 
 
 @contextlib.contextmanager
@@ -219,28 +210,3 @@ def chdir(directory):
         yield
     finally:
         os.chdir(previous_directory)
-
-
-def mfa_copy_and_convert(directory, text_file, audio_file):
-    """Prepare text and audio files for MFA alignment"""
-    speaker_directory = directory / audio_file.parent.name
-    speaker_directory.mkdir(exist_ok=True, parents=True)
-    shutil.copyfile(text_file, speaker_directory / text_file.name)
-
-    # Aligning fails if the audio is not a 16-bit mono wav file, so
-    # we convert instead of copy
-    audio, sample_rate = soundfile.read(audio_file)
-    soundfile.write(
-        speaker_directory / f'{audio_file.stem}.wav',
-        audio,
-        sample_rate)
-
-
-@contextlib.contextmanager
-def disable_logging(level):
-    """Context manager for changing the current log level of all loggers"""
-    try:
-        logging.disable(level)
-        yield
-    finally:
-        logging.disable(logging.NOTSET)

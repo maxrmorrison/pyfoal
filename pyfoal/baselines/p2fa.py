@@ -1,3 +1,6 @@
+import functools
+import multiprocessing as mp
+import os
 import string
 import subprocess
 import tempfile
@@ -5,18 +8,69 @@ from pathlib import Path
 
 import g2p_en
 import pypar
+import resampy
 import soundfile
 
 import pyfoal
 
 
 ###############################################################################
-# P2FA constants
+# Constants
 ###############################################################################
 
 
 # The sampling rate that P2FA uses
 SAMPLE_RATE = 11025
+
+
+###############################################################################
+# Penn phonetic forced aligner
+###############################################################################
+
+
+def align(text, audio, sample_rate):
+    """Align text and audio using P2FA"""
+    duration = len(audio) / sample_rate
+
+    # Maybe resample
+    if sample_rate != pyfoal.p2fa.SAMPLE_RATE:
+        resampy.resample(audio, sample_rate, pyfoal.p2fa.SAMPLE_RATE)
+
+    # Cache aligner
+    if not hasattr(align, 'aligner'):
+        align.aligner = Aligner()
+
+    # Perform forced alignment
+    return align.aligner(text, audio, duration)
+
+
+def from_file(text_file, audio_file):
+    """Align text and audio on disk using P2FA"""
+    # Load text
+    text = pyfoal.load.text(text_file)
+
+    # Load audio
+    audio, sample_rate = pyfoal.load.audio(audio_file)
+
+    # Align
+    return align(text, audio, sample_rate)
+
+
+def from_file_to_file(text_file, audio_file, output_file):
+    """Align text and audio on disk using P2FA and save"""
+    from_file(text_file, audio_file).save(output_file)
+
+
+def from_files_to_files(text_files, audio_files, output_files, num_workers=None):
+    # Default to using all cpus
+    if num_workers is None:
+        num_workers = os.cpu_count()
+
+    # Launch multiprocessed P2FA alignment
+    align_fn = functools.partial(from_file_to_file)
+    iterator = zip(text_files, audio_files, output_files)
+    with mp.Pool(num_workers) as pool:
+        pool.starmap(align_fn, iterator)
 
 
 ###############################################################################
@@ -94,7 +148,7 @@ class Aligner:
         """Write HTK arguments and convert data to HTK format"""
         # Save audio to disk
         audiofile = directory / 'sound.wav'
-        soundfile.write(audiofile, audio, SAMPLE_RATE)
+        soundfile.write(str(audiofile), audio, SAMPLE_RATE)
 
         # Save HTK process metadata
         code_file = directory / 'codetr.scp'
