@@ -1,5 +1,9 @@
 import contextlib
+import functools
 import os
+
+import torchaudio
+import tqdm
 
 import pyfoal
 
@@ -32,20 +36,17 @@ def align(
     """
     # Montreal forced aligner
     if aligner == 'mfa':
-        return pyfoal.aligners.mfa.align(text, audio, sample_rate)
+        return pyfoal.baselines.mfa.align(text, audio, sample_rate)
 
     # Penn phonetic forced aligner
     if aligner == 'p2fa':
-        return pyfoal.aligners.p2fa.align(text, audio, sample_rate)
+        return pyfoal.baselines.p2fa.align(text, audio, sample_rate)
 
     # RAD-TTS neural alignment
     if aligner == 'radtts':
-        return pyfoal.aligners.radtts.align(
-            text,
-            audio,
-            sample_rate,
-            checkpoint,
-            gpu)
+
+        # TODO
+        pass
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -76,19 +77,23 @@ def from_file(
     """
     # Montreal forced aligner
     if aligner == 'mfa':
-        return pyfoal.aligners.mfa.from_file(text_file, audio_file)
+        return pyfoal.baselines.mfa.from_file(text_file, audio_file)
 
     # Penn phonetic forced aligner
     if aligner == 'p2fa':
-        return pyfoal.aligners.p2fa.from_file(text_file, audio_file)
-        
+        return pyfoal.baselines.p2fa.from_file(text_file, audio_file)
+
     # RAD-TTS neural alignment
     if aligner == 'radtts':
-        return pyfoal.aligners.radtts.from_file(
-            text_file,
-            audio_file,
-            checkpoint,
-            gpu)
+
+        # Load text
+        text = pyfoal.load.text(text_file)
+
+        # Load audio
+        audio, sample_rate = pyfoal.load.audio(audio_file)
+
+        # Align
+        return align(text, audio, sample_rate, aligner, checkpoint, gpu)
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -118,26 +123,26 @@ def from_file_to_file(
     """
     # Montreal forced aligner
     if aligner == 'mfa':
-        pyfoal.aligners.mfa.from_file_to_file(
+        pyfoal.baselines.mfa.from_file_to_file(
             text_file,
             audio_file,
             output_file)
 
     # Penn phonetic forced aligner
     elif aligner == 'p2fa':
-        pyfoal.aligners.p2fa.from_file_to_file(
+        pyfoal.baselines.p2fa.from_file_to_file(
             text_file,
             audio_file,
             output_file)
-        
+
     # RAD-TTS neural alignment
     elif aligner == 'radtts':
-        pyfoal.aligners.radtts.from_file_to_file(
-            text_file,
-            audio_file,
-            output_file,
-            checkpoint,
-            gpu)
+
+        # Align
+        alignment = from_file(text_file, audio_file, aligner, checkpoint, gpu)
+
+        # Save
+        alignment.save(output_file)
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -170,7 +175,7 @@ def from_files_to_files(
     """
     # Montreal forced aligner
     if aligner == 'mfa':
-        pyfoal.aligners.mfa.from_files_to_files(
+        pyfoal.baselines.mfa.from_files_to_files(
             text_files,
             audio_files,
             output_files,
@@ -178,20 +183,20 @@ def from_files_to_files(
 
     # Penn phonetic forced aligner
     elif aligner == 'p2fa':
-        pyfoal.aligners.p2fa.from_files_to_files(
+        pyfoal.baselines.p2fa.from_files_to_files(
             text_files,
             audio_files,
             output_files,
             num_workers)
-        
+
     # RAD-TTS neural alignment
     elif aligner == 'radtts':
-        pyfoal.aligners.radtts.from_files_to_files(
-            text_files,
-            audio_files,
-            output_files,
-            checkpoint,
-            gpu)
+        align_fn = functools.partial(
+            from_file_to_file,
+            checkpoint=checkpoint,
+            gpu=gpu)
+        for item in zip(text_files, audio_files, output_files):
+            align_fn(*item)
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -210,3 +215,23 @@ def chdir(directory):
         yield
     finally:
         os.chdir(previous_directory)
+
+
+def iterator(iterable, message, initial=0, total=None):
+    """Create a tqdm iterator"""
+    total = len(iterable) if total is None else total
+    return tqdm.tqdm(
+        iterable,
+        desc=message,
+        dynamic_ncols=True,
+        initial=initial,
+        total=total)
+
+
+def resample(audio, sample_rate, target_rate=pyfoal.SAMPLE_RATE):
+    """Perform audio resampling"""
+    if sample_rate == target_rate:
+        return audio
+    resampler = torchaudio.transforms.Resample(sample_rate, target_rate)
+    resampler = resampler.to(audio.device)
+    return resampler(audio)

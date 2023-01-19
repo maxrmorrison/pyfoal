@@ -7,7 +7,7 @@ import torch
 
 
 class ConvAttention(torch.nn.Module):
-    
+
     def __init__(
         self,
         n_mel_channels=80,
@@ -45,23 +45,30 @@ class ConvAttention(torch.nn.Module):
             ) ** 2
         )
 
-        # Compute log-likelihood
-        temperature = .0005
-        attention = -temperature * attention.sum(1, keepdim=True)
+        # Sum over channels and scale
+        # TODO - hparam over temperature
+        # Input shape: (batch, mel_channels, frames, phonemes)
+        # Output shape: (batch, frames, phonemes)
+        attention = -.0005 * attention.sum(1)
+
+        # Maybe add a prior distribution
+        # TODO - why log_softmax instead of log?
         if attention_prior is not None:
             attention = (
-                torch.nn.functional.log_softmax(attention, dim=3) +
-                torch.log(attention_prior[:, None] + 1e-8))
+                torch.nn.functional.log_softmax(attention, dim=2) +
+                torch.log(attention_prior + 1e-8))
 
+        # Save copy of logits
         attention_logprob = attention.clone()
 
+        # Apply mask
         if mask is not None:
-            attention.data.masked_fill_(
-                mask.permute(0, 2, 1).unsqueeze(2), -float("inf"))
+            attention.data.masked_fill_(~mask, -float('inf'))
 
         # Softmax along phonemes
-        attention = torch.nn.functional.softmax(attention, dim=3)
+        attention = torch.nn.functional.softmax(attention, dim=2)
 
+        # TODO - which to use?
         return attention, attention_logprob
 
 

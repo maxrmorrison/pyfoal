@@ -4,6 +4,6 @@ authors:
 - family-names: "Morrison"
   given-names: "Max"
 title: "pyfoal"
-version: 0.0.3
-date-released: 2021-04-03
+version: 1.0.0
+date-released: 2023-02-01
 url: "https://github.com/maxrmorrison/pyfoal"

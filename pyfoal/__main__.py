@@ -5,54 +5,49 @@ import pyfoal
 
 
 ###############################################################################
-# Entry point
+# Forced alignment interface
 ###############################################################################
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-
-    # Required arguments
     parser.add_argument(
-        '--text',
+        '--text_file',
         nargs='+',
         required=True,
         type=Path,
         help='The speech transcript files')
     parser.add_argument(
-        '--audio',
+        '--audio_files',
         nargs='+',
         required=True,
         type=Path,
         help='The speech audio files')
     parser.add_argument(
-        '--output',
+        '--output_files',
         nargs='+',
         required=True,
         type=Path,
-        help='The json files to save the alignments')
+        help='The files to save the alignments')
+    parser.add_argument(
+        '--aligner',
+        default=pyfoal.DEFAULT_ALIGNER,
+        help='The alignment method to use')
     parser.add_argument(
         '--num_workers',
         type=int,
         help='Number of CPU cores to utilize. Defaults to all cores.')
     parser.add_argument(
-        '--backend',
-        default='mfa',
-        help='The aligner to use. One of [\'mfa\' (default), \'p2fa\'].')
-
+        '--checkpoint',
+        type=Path,
+        default=pyfoal.DEFAULT_CHECKPOINT,
+        help='The checkpoint to use for neural methods')
+    parser.add_argument(
+        '--gpu',
+        type=int,
+        help='The index of the GPU to use for inference. Defaults to CPU.')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
-    # Parse command-line arguments
-    args = parse_args()
-
-    # Select aligner
-    with pyfoal.backend(args.backend):
-
-        # Generate alignment and save to disk
-        pyfoal.from_files_to_files(
-            args.text,
-            args.audio,
-            args.output,
-            args.num_workers)
+    pyfoal.from_files_to_files(**vars(parse_args()))

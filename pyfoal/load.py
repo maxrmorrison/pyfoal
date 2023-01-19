@@ -1,11 +1,28 @@
 import csv
+import json
+
+import torchaudio
 
 import pyfoal
 
 
 ###############################################################################
-# Loading
+# Loading utilities
 ###############################################################################
+
+
+def audio(file):
+    """Load audio from disk"""
+    audio, sample_rate = torchaudio.load(file)
+
+    # Maybe resample
+    return pyfoal.resample(audio, sample_rate)
+
+
+def partition(dataset):
+    """Load partitions for dataset"""
+    with open(pyfoal.PARTITION_DIR / f'{dataset}.json') as file:
+        return json.load(file)
 
 
 def phonemes():

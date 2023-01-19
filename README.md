@@ -1,15 +1,19 @@
-# Python forced alignment
+<h1 align="center">Python forced alignment</h1>
+<div align="center">
 
-[![PyPI](https://img.shields.io/pypi/v/pypar.svg)](https://pypi.python.org/pypi/pyfoal)
+[![PyPI](https://img.shields.io/pypi/v/pyfoal.svg)](https://pypi.python.org/pypi/pyfoal)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://pepy.tech/badge/pyfoal)](https://pepy.tech/project/pyfoal)
 
+</div>
+
 Forced alignment suite. Includes English grapheme-to-phoneme (G2P) and
 phoneme alignment from the following forced alignment tools.
- - Montreal Forced Aligner (MFA) [1]
- - Penn Phonetic Forced Aligner (P2FA) [2]
+ - RAD-TTS [1]
+ - Montreal Forced Aligner (MFA) [2]
+ - Penn Phonetic Forced Aligner (P2FA) [3]
 
-MFA is used by default. Alignments can be saved to disk or accessed via the
+RAD-TTS is used by default. Alignments can be saved to disk or accessed via the
 `pypar.Alignment` phoneme alignment representation. See
 [`pypar`](https://github.com/maxrmorrison/pypar) for more details.
 
@@ -20,13 +24,33 @@ MFA is used by default. Alignments can be saved to disk or accessed via the
    (`pyfoal.interpolate`)
 
 
-## Installation
+## Table of contents
 
-First, install the Python dependencies in a new Conda environment
+- [Installation](#installation)
+- [Inference](#inference)
+    * [Application programming interface](#application-programming-interface)
+        * [`pyfoal.from_audio`](#pyfoalfrom_audio)
+        * [`pyfoal.from_file`](#pyfoalfrom_file)
+        * [`pyfoal.from_file_to_file`](#pyfoalfrom_file_to_file)
+        * [`pyfoal.from_files_to_files`](#pyfoalfrom_files_to_files)
+    * [Command-line interface](#command-line-interface)
+- [Training](#training)
+    * [Download](#download)
+    * [Preprocess](#preprocess)
+    * [Partition](#partition)
+    * [Train](#train)
+    * [Monitor](#monitor)
+- [Evaluation](#evaluation)
+    * [Evaluate](#evaluate)
+    * [Plot](#plot)
+- [References](#references)
+
+
+## Installation
 
 `pip install pyfoal`
 
-Next, perform the necessary installation of either MFA or P2FA.
+MFA and P2FA both require additional installation steps found below.
 
 
 ### Montreal Forced Aligner (MFA)
@@ -57,8 +81,9 @@ For more help with HTK installation, see notes by
 [Steve Rubin](https://github.com/ucbvislab/p2fa-vislab#install-htk-34-note-341-will-not-work-get-htk-here).
 
 
-## Usage
+## Inference
 
+**TODO** - update
 
 ### Force-align text and audio
 
@@ -76,7 +101,7 @@ alignment = pyfoal.align(text, audio, sample_rate)
 # Return the resulting alignment
 alignment = pyfoal.from_file(text_file, audio_file)
 
-# Save alignment to json
+# Save alignment to .json, .mlf, or .TextGrid
 pyfoal.from_file_to_file(text_file, audio_file, output_file)
 ```
 
@@ -103,6 +128,8 @@ with pyfoal.backend('p2fa'):
 
 ### Command-line interface
 
+**TODO** - update
+
 ```
 usage: python -m pyfoal
     [-h]
@@ -110,7 +137,6 @@ usage: python -m pyfoal
     --audio AUDIO [AUDIO ...]
     --output OUTPUT [OUTPUT ...]
     [--num_workers NUM_WORKERS]
-    [--backend BACKEND]
 
 optional arguments:
     -h, --help          show this help message and exit
@@ -122,27 +148,82 @@ optional arguments:
                         The json files to save the alignments
     --num_workers NUM_WORKERS
                         Number of CPU cores to utilize. Defaults to all cores.
-    --backend BACKEND
-                        The aligner to use. One of ['mfa' (default), 'p2fa'].
 ```
 
 
-## Tests
+## Training
 
-Tests can be run as follows.
+### Download
+
+`python -m pyfoal.data.download`
+
+Downloads and uncompresses the `arctic` and `libritts` datasets used for training.
+
+
+### Preprocess
+
+`python -m pyfoal.data.preprocess`
+
+Converts each dataset to a common format on disk ready for training.
+
+
+### Partition
+
+`python -m pyfoal.partition`
+
+Generates `train` `valid`, and `test` partitions for `arctic` and `libritts`.
+Partitioning is deterministic given the same random seed. You do not need to
+run this step, as the original partitions are saved in
+`pyfoal/assets/partitions`.
+
+
+### Train
+
+`python -m pyfoal.train --config <config> --gpus <gpus>`
+
+Trains a model according to a given configuration on the `libritts`
+dataset. Uses a list of GPU indices as an argument, and uses distributed
+data parallelism (DDP) if more than one index is given. For example,
+`--gpus 0 3` will train using DDP on GPUs `0` and `3`.
+
+
+### Monitor
+
+Run `tensorboard --logdir runs/`. If you are running training remotely, you
+must create a SSH connection with port forwarding to view Tensorboard.
+This can be done with `ssh -L 6006:localhost:6006 <user>@<server-ip-address>`.
+Then, open `localhost:6006` in your browser.
+
+
+## Evaluation
+
+### Evaluate
 
 ```
-pip install pytest
-pytest
+python -m pyfal.evaluate \
+    --config <config> \
+    --checkpoint <checkpoint> \
+    --gpu <gpu>
 ```
+
+Evaluate a model. `<checkpoint>` is the checkpoint file to evaluate and `<gpu>`
+is the GPU index.
+
+### Plot
+
+**TODO** - alignment plot
 
 
 ## References
 
-[1] J. Yuan and M. Liberman, “Speaker identification on the scotus
+[1] R. Badlani, A. Łańcucki, K. J. Shih, R. Valle, W. Ping, and B.
+Catanzaro, "One TTS Alignment to Rule Them All," International
+Conference on Acoustics, Speech and Signal Processing (ICASSP), 2022.
+
+[2] J. Yuan and M. Liberman, “Speaker identification on the scotus
 corpus,” Journal of the Acoustical Society of America, vol. 123, p.
 3878, 2008.
 
-[2] M. McAuliffe, , M. Socolof, S. Mihuc, M. Wagner, and M. Sonderegger,
+[3] M. McAuliffe, M. Socolof, S. Mihuc, M. Wagner, and M. Sonderegger,
 "Montreal Forced Aligner: Trainable Text-Speech Alignment Using Kaldi,"
 Interspeech, vol. 2017, p. 498-502. 2017.
