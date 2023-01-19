@@ -1,6 +1,6 @@
 import torch
 
-import NAME
+import pyfoal
 
 
 ###############################################################################
@@ -62,7 +62,7 @@ class Metadata:
 
     def __init__(self, name, partition):
         self.name = name
-        self.stems = NAME.load.partition(name)[partition]
+        self.stems = pyfoal.load.partition(name)[partition]
 
     def __len__(self):
         return len(self.stems)

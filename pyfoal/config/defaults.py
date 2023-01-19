@@ -51,6 +51,9 @@ SOURCES_DIR = Path(__file__).parent.parent.parent / 'data' / 'sources'
 ###############################################################################
 
 
+# The method to use for forced alignment. One of ['mfa', 'p2fa', 'radtts']
+ALIGNER = 'radtts'
+
 # Number of steps between tensorboard logging
 LOG_INTERVAL = 2500  # steps
 

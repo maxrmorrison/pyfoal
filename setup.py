@@ -16,7 +16,11 @@ setup(
         'g2p_en',  # TODO - make optional
         'pypar',
         'resampy',  # TODO - replace
-        'soundfile'],  # TODO - replace
+        'soundfile',  # TODO - replace
+        'torch',
+        'torchaudio',
+        'tqdm',
+        'yapecs'],
     packages=['pyfoal'],
     package_data={'pyfoal': ['assets/*', 'assets/*/*']},
     long_description=long_description,
