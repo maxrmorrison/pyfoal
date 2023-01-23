@@ -1,3 +1,4 @@
+import pypar
 import torch
 
 import pyfoal
@@ -9,18 +10,12 @@ import pyfoal
 
 
 class Dataset(torch.utils.data.Dataset):
-    """PyTorch dataset
+    """PyTorch dataset"""
 
-    Arguments
-        name - string
-            The name of the dataset
-        partition - string
-            The name of the data partition
-    """
-
-    def __init__(self, names, partition):
+    def __init__(self, datasets, partition):
         self.partition = partition
-        self.datasets = [Metadata(name, partition) for name in names]
+        self.datasets = {
+            dataset: Metadata(dataset, partition) for dataset in datasets}
 
     def __getitem__(self, index):
         """Retrieve the indexth item"""
@@ -28,10 +23,30 @@ class Dataset(torch.utils.data.Dataset):
         index, dataset = self.get_dataset(index)
 
         # Get dataset stem
-        stem = self.stems[index]
+        stem = dataset.stems[index]
 
-        # TODO - Load from stem
-        raise NotImplementedError
+        # Load phoneme indices
+        text = torch.load(dataset.cache / 'text' / f'{stem}.pt')
+
+        # Load audio
+        audio = pyfoal.load.audio(dataset.cache / 'audio' / f'{stem}.wav')
+
+        # Maybe load true alignment
+        if dataset.name == 'arctic':
+            alignment = pypar.Alignment(
+                dataset.cache / 'alignment' / f'{stem}.TextGrid')
+
+            # Compute word bounds from alignment
+            bounds = alignment.word_bounds(
+                pyfoal.SAMPLE_RATE,
+                pyfoal.HOPSIZE,
+                silences=True)
+            bounds = torch.cat(
+                [torch.tensor(bound)[None] for bound in bounds]).T
+        else:
+            bounds = None
+
+        return text, audio, bounds, stem
 
     def __len__(self):
         """Length of the dataset"""
@@ -62,6 +77,7 @@ class Metadata:
 
     def __init__(self, name, partition):
         self.name = name
+        self.cache = pyfoal.CACHE_DIR / name
         self.stems = pyfoal.load.partition(name)[partition]
 
     def __len__(self):

@@ -29,7 +29,7 @@ RAD-TTS is used by default. Alignments can be saved to disk or accessed via the
 - [Installation](#installation)
 - [Inference](#inference)
     * [Application programming interface](#application-programming-interface)
-        * [`pyfoal.from_audio`](#pyfoalfrom_audio)
+        * [`pyfoal.from_text_and_audio`](#pyfoalfrom_text_and_audio)
         * [`pyfoal.from_file`](#pyfoalfrom_file)
         * [`pyfoal.from_file_to_file`](#pyfoalfrom_file_to_file)
         * [`pyfoal.from_files_to_files`](#pyfoalfrom_files_to_files)
@@ -88,7 +88,7 @@ For more help with HTK installation, see notes by
 ### Force-align text and audio
 
 ```python
-alignment = pyfoal.align(text, audio, sample_rate)
+alignment = pyfoal.from_text_and_audio(text, audio, sample_rate)
 ```
 
 `text` is a string containing the speech transcript.

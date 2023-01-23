@@ -33,8 +33,8 @@ def align(text, audio, sample_rate):
     duration = len(audio) / sample_rate
 
     # Maybe resample
-    if sample_rate != pyfoal.p2fa.SAMPLE_RATE:
-        resampy.resample(audio, sample_rate, pyfoal.p2fa.SAMPLE_RATE)
+    if sample_rate != SAMPLE_RATE:
+        resampy.resample(audio, sample_rate, SAMPLE_RATE)
 
     # Cache aligner
     if not hasattr(align, 'aligner'):
@@ -83,10 +83,10 @@ class Aligner:
 
     def __init__(self):
         """Aligner constructor"""
-        self.hcopy = pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'config'
-        self.macros = pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'macros'
-        self.model = pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'hmmdefs'
-        self.monophones = pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'monophones'
+        self.hcopy = pyfoal.ASSETS_DIR / 'p2fa' / 'config'
+        self.macros = pyfoal.ASSETS_DIR / 'p2fa' / 'macros'
+        self.model = pyfoal.ASSETS_DIR / 'p2fa' / 'hmmdefs'
+        self.monophones = pyfoal.ASSETS_DIR / 'p2fa' / 'monophones'
 
         punctuation = [s for s in string.punctuation + '”“—' if s != '-']
         self.punctuation_table = str.maketrans('-', ' ', ''.join(punctuation))

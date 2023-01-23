@@ -1,18 +1,21 @@
 import torch
 
+import pyfoal
+
 
 ###############################################################################
 # Attention-based alignment model
 ###############################################################################
 
 
-class ConvAttention(torch.nn.Module):
+class Model(torch.nn.Module):
 
     def __init__(
         self,
         n_mel_channels=80,
         n_text_channels=512):
         super().__init__()
+        # TODO - add embedding layer and encoder (3 1d conv)
         self.key_encoder = torch.nn.Sequential(
             Masked1dConv(
                 n_text_channels,
@@ -46,10 +49,9 @@ class ConvAttention(torch.nn.Module):
         )
 
         # Sum over channels and scale
-        # TODO - hparam over temperature
         # Input shape: (batch, mel_channels, frames, phonemes)
         # Output shape: (batch, frames, phonemes)
-        attention = -.0005 * attention.sum(1)
+        attention = -pyfoal.TEMPERATURE * attention.sum(1)
 
         # Maybe add a prior distribution
         # TODO - why log_softmax instead of log?
@@ -77,6 +79,7 @@ class ConvAttention(torch.nn.Module):
 ###############################################################################
 
 
+# TODO - should just be a conv
 class Masked1dConv(torch.nn.Module):
 
     def __init__(

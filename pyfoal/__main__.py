@@ -31,7 +31,7 @@ def parse_args():
         help='The files to save the alignments')
     parser.add_argument(
         '--aligner',
-        default=pyfoal.DEFAULT_ALIGNER,
+        default=pyfoal.ALIGNER,
         help='The alignment method to use')
     parser.add_argument(
         '--num_workers',

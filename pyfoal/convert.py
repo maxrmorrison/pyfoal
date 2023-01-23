@@ -5,7 +5,7 @@ import pyfoal
 
 
 ###############################################################################
-# Conversion functions
+# Index conversions
 ###############################################################################
 
 
@@ -96,3 +96,13 @@ def indices_to_alignment(indices, hopsize, word_breaks=None):
     words.append(pypar.Word(word_break_indices[-1][0], phonemes))
 
     return pypar.Alignment(words)
+
+
+###############################################################################
+# Time conversions
+###############################################################################
+
+
+def samples_to_seconds(samples, sample_rate=pyfoal.SAMPLE_RATE):
+    """Convert time in samples to seconds"""
+    return samples / sample_rate

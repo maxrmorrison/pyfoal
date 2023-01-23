@@ -15,6 +15,7 @@ setup(
     install_requires=[
         'g2p_en',  # TODO - make optional
         'pypar',
+        'requests',
         'resampy',  # TODO - replace
         'soundfile',  # TODO - replace
         'torch',

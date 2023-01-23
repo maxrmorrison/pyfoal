@@ -1,3 +1,6 @@
+# Development
+# - hyperparameter search over temperature
+
 ###############################################################################
 # Configuration
 ###############################################################################
@@ -11,8 +14,8 @@ import yapecs
 yapecs.configure('pyfoal', defaults)
 
 # Import configuration parameters
-from .config.static import *
 from .config.defaults import *
+from .config.static import *
 
 
 ###############################################################################

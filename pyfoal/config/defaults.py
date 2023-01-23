@@ -11,6 +11,15 @@ CONFIG = 'pyfoal'
 
 
 ###############################################################################
+# Audio parameters
+###############################################################################
+
+
+# The audio sampling rate
+SAMPLE_RATE = 16000  # samples per second
+
+
+###############################################################################
 # Data parameters
 ###############################################################################
 
@@ -51,8 +60,11 @@ SOURCES_DIR = Path(__file__).parent.parent.parent / 'data' / 'sources'
 ###############################################################################
 
 
-# The method to use for forced alignment. One of ['mfa', 'p2fa', 'radtts']
+# The method to use for forced alignment. One of ['mfa', 'p2fa', 'radtts'].
 ALIGNER = 'radtts'
+
+# The method to use for grapheme-to-phoneme conversion. One of ['cmu', 'ipa'].
+G2P = 'ipa'
 
 # Number of steps between tensorboard logging
 LOG_INTERVAL = 2500  # steps
@@ -80,3 +92,68 @@ NUM_WORKERS = 2
 
 # Seed for all random number generators
 RANDOM_SEED = 1234
+
+
+###############################################################################
+# Model parameters
+###############################################################################
+
+
+# Sampling temperature
+TEMPERATURE = .0005
+
+
+###############################################################################
+# Phoneme sets
+###############################################################################
+
+
+# CMU phoneme set
+CMU_PHONEMES = [
+	'aa',
+	'ae',
+	'ah',
+	'ao',
+	'aw',
+	'ay',
+	'b',
+	'ch',
+	'd',
+	'dh',
+	'eh',
+	'er',
+	'ey',
+	'f',
+	'g',
+	'hh',
+	'ih',
+	'iy',
+	'jh',
+	'k',
+	'l',
+	'm',
+	'n',
+	'ng',
+	'ow',
+	'oy',
+	'p',
+	'r',
+	's',
+	'sh',
+	't',
+	'th',
+	'uh',
+	'uw',
+	'v',
+	'w',
+	'y',
+	'z',
+	'zh',
+	'ax',
+	'sp',
+	'<unk>'
+]
+
+# IPA phoneme set
+# TODO
+IPA_PHONEMES = []

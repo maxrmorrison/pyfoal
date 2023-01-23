@@ -2,6 +2,7 @@ import contextlib
 import functools
 import os
 
+import torch
 import torchaudio
 import tqdm
 
@@ -13,11 +14,11 @@ import pyfoal
 ###############################################################################
 
 
-def align(
+def from_text_and_audio(
     text,
     audio,
     sample_rate,
-    aligner=pyfoal.DEFAULT_ALIGNER,
+    aligner=pyfoal.ALIGNER,
     checkpoint=pyfoal.DEFAULT_CHECKPOINT,
     gpu=None):
     """Phoneme-level forced-alignment
@@ -25,13 +26,13 @@ def align(
     Arguments
         text : string
             The speech transcript
-        audio : np.array(shape=(samples,))
+        audio : torch.tensor(shape=(1, samples))
             The speech signal to process
         sample_rate : int
             The audio sampling rate
 
     Returns
-        alignment : Alignment
+        alignment : pypar.Alignment
             The forced alignment
     """
     # Montreal forced aligner
@@ -45,8 +46,17 @@ def align(
     # RAD-TTS neural alignment
     if aligner == 'radtts':
 
-        # TODO
-        pass
+        # Get inference device
+        device = torch.device('cpu' if gpu is None else f'cuda:{gpu}')
+
+        # Preprocess
+        phonemes, audio = preprocess(text, audio, sample_rate)
+
+        # Align
+        attention = infer(phonemes.to(device), audio.to(device), checkpoint)
+
+        # Postprocess
+        return postprocess(attention)
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -54,7 +64,7 @@ def align(
 def from_file(
     text_file,
     audio_file,
-    aligner=pyfoal.DEFAULT_ALIGNER,
+    aligner=pyfoal.ALIGNER,
     checkpoint=pyfoal.DEFAULT_CHECKPOINT,
     gpu=None):
     """Phoneme alignment from audio and text files
@@ -93,7 +103,13 @@ def from_file(
         audio, sample_rate = pyfoal.load.audio(audio_file)
 
         # Align
-        return align(text, audio, sample_rate, aligner, checkpoint, gpu)
+        return from_text_and_audio(
+            text,
+            audio,
+            sample_rate,
+            aligner,
+            checkpoint,
+            gpu)
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -102,7 +118,7 @@ def from_file_to_file(
     text_file,
     audio_file,
     output_file,
-    aligner=pyfoal.DEFAULT_ALIGNER,
+    aligner=pyfoal.ALIGNER,
     checkpoint=pyfoal.DEFAULT_CHECKPOINT,
     gpu=None):
     """Perform phoneme alignment from files and save to disk
@@ -151,7 +167,7 @@ def from_files_to_files(
     text_files,
     audio_files,
     output_files,
-    aligner=pyfoal.DEFAULT_ALIGNER,
+    aligner=pyfoal.ALIGNER,
     num_workers=None,
     checkpoint=pyfoal.DEFAULT_CHECKPOINT,
     gpu=None):
@@ -199,6 +215,51 @@ def from_files_to_files(
             align_fn(*item)
 
     raise ValueError(f'Aligner {aligner} is not defined')
+
+
+###############################################################################
+# RAD-TTS alignment
+###############################################################################
+
+
+def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
+    """Perform forward pass to retrieve attention alignment"""
+    # Maybe cache model
+    if (
+        not hasattr(infer, 'model') or
+        infer.checkpoint != checkpoint or
+        infer.device != phonemes.device
+    ):
+        # Maybe initialize model
+        model = pyfoal.Model()
+
+        # Load from disk
+        infer.model, *_ = pyfoal.checkpoint.load(checkpoint, model)
+        infer.checkpoint = checkpoint
+        infer.device = phonemes.device
+
+    # Move model to correct device (no-op if devices are the same)
+    infer.model = infer.model.to(phonemes.device)
+
+    # Infer
+    return infer.model(phonemes, audio)
+
+
+def postprocess(text, phonemes, attention):
+    """Postprocess attention alignment"""
+    # TODO
+    pass
+
+
+def preprocess(text, audio, sample_rate):
+    """Preprocess text and audio for alignment"""
+    # Convert text to IPA
+    phonemes = pyfoal.g2p.from_text(text)
+
+    # Resample audio
+    audio = resample(audio, sample_rate)
+
+    return phonemes, audio
 
 
 ###############################################################################
