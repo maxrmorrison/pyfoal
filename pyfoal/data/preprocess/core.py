@@ -13,8 +13,13 @@ def datasets(datasets):
             The name of the dataset to preprocess
     """
     for dataset in datasets:
-        input_directory = pyfoal.DATA_DIR / dataset
-        output_directory = pyfoal.CACHE_DIR / dataset
+        directory = pyfoal.CACHE_DIR / dataset
 
-        # TODO - Perform preprocessing
-        raise NotImplementedError
+        # Get text files
+        text_files = directory.rglob('*.txt')
+
+        # Get output phoneme files
+        phoneme_files = [file.with_suffix('.pt') for file in text_files]
+
+        # Grapheme-to-phoneme
+        pyfoal.g2p.from_files_to_files(text_files, phoneme_files)

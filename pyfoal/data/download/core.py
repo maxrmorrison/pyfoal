@@ -1,4 +1,44 @@
-import json
+###############################################################################
+# Data directory structure
+###############################################################################
+
+
+# data
+# ├── cache
+# │   ├── <dataset-0>
+# |   |   ├── 0000                 (speaker)
+# |   |   |   ├── 000000.TextGrid  (alignment - for evaluation datasets only)
+# |   |   |   ├── 000000.txt       (text)
+# |   |   |   ├── 000000.wav       (audio)
+# |   |   |   ├── 000001.TextGrid
+# |   |   |   ├── 000001.txt
+# |   |   |   ├── 000001.wav
+# |   |   |   ├── ...
+# |   |   ├── 0001
+# |   |   |   ├── ...
+# |   |   ├── ...
+# │   ├── <dataset-1>
+# |   |   ├── ...
+# │   ├── ...
+# ├── datasets
+# |   ├── <dataset-0>
+# |   |   ├── {raw contents}
+# |   ├── <dataset-1>
+# |   |   ├── ...
+# |   ├── ...
+# └── sources
+#     ├── <dataset-0>
+#     |   └── {tarballs and zipfiles}
+#     ├── <dataset-1>
+#     |   └── ...
+#     ├── ...
+
+
+###############################################################################
+# Imports
+###############################################################################
+
+
 import re
 import requests
 import shutil
@@ -87,17 +127,12 @@ def arctic():
             re.MULTILINE)}
 
     # Iterate over speakers and copy
-    iterator = pyfoal.iterator(
-        ARCTIC_SPEAKERS,
-        'Formatting arctic',
-        total=len(ARCTIC_SPEAKERS))
-    for speaker in iterator:
+    for index, speaker in enumerate(ARCTIC_SPEAKERS):
         input_directory = data_directory / f'cmu_us_{speaker}_arctic'
-        output_directory = cache_directory / speaker
 
-        # Create output directories
-        for feature in ['alignment', 'audio', 'text']:
-            (output_directory / feature).mkdir(exist_ok=True, parents=True)
+        # Setup output directory
+        output_directory = cache_directory / f'{index:04d}'
+        output_directory.mkdir(exist_ok=True, parents=True)
 
         # Get input files
         alignment_files = sorted((input_directory / 'lab').rglob('*.lab'))
@@ -106,14 +141,14 @@ def arctic():
         audio_files = sorted((input_directory / 'wav').rglob('*.wav'))
 
         # Save to cache
+        i = 0
         for alignment_file, audio_file in zip(alignment_files, audio_files):
             assert alignment_file.stem == audio_file.stem
 
             try:
 
                 # Save text
-                text_file = output_directory / 'text' / f'{audio_file.stem}.txt'
-                with open(text_file, 'w') as file:
+                with open(output_directory / f'{i:06d}.txt', 'w') as file:
                     file.write(sentences[audio_file.stem])
 
             except KeyError:
@@ -126,7 +161,7 @@ def arctic():
 
             # Save audio
             torchaudio.save(
-                output_directory / 'audio' / audio_file.name,
+                output_directory / f'{i:06d}.wav',
                 audio,
                 pyfoal.SAMPLE_RATE)
 
@@ -156,13 +191,13 @@ def arctic():
             endtimes[-1] = pyfoal.convert.samples_to_seconds(audio.shape[-1])
 
             # Handle duplicates
-            i = 0
-            while i < len(phonemes) - 1:
-                if phonemes[i] == phonemes[i + 1]:
-                    endtimes[i] = endtimes[i + 1]
-                    del phonemes[i]
+            j = 0
+            while j < len(phonemes) - 1:
+                if phonemes[j] == phonemes[j + 1]:
+                    endtimes[j] = endtimes[j + 1]
+                    del phonemes[j]
                 else:
-                    i += 1
+                    j += 1
 
             # We don't have word alignments, so we just treat each
             # phoneme as a word
@@ -175,22 +210,24 @@ def arctic():
 
             # Write alignment
             pypar.Alignment(alignment).save(
-                output_directory / 'alignment' / f'{audio_file.stem}.TextGrid')
+                output_directory / f'{i:06d}.TextGrid')
+
+            i += 1
 
 
 def libritts():
     """Download libritts dataset"""
     # Create directory for downloads
-    source_directory = pyfoal.SOURCE_DIR / 'libritts'
+    source_directory = pyfoal.SOURCES_DIR / 'libritts'
     source_directory.mkdir(exist_ok=True, parents=True)
-    
+
     # Create directory for unpacking
     data_directory = pyfoal.DATA_DIR / 'libritts'
     data_directory.mkdir(exist_ok=True, parents=True)
-    
+
     # Download and unpack
     for partition in [
-        'train-clean-100', 
+        'train-clean-100',
         'train-clean-360',
         'dev-clean',
         'test-clean']:
@@ -216,34 +253,26 @@ def libritts():
     text_files = [
         file.with_suffix('.normalized.txt') for file in audio_files]
 
-    # Track previous and next utterances
-    context = {}
-    prev_parts = None
-
     # Write audio to cache
     speaker_count = {}
     cache_directory = pyfoal.CACHE_DIR / 'libritts'
     cache_directory.mkdir(exist_ok=True, parents=True)
-    with pyfoal.data.chdir(cache_directory):
+    with pyfoal.chdir(cache_directory):
 
         # Iterate over files
         iterator = pyfoal.iterator(
             zip(audio_files, text_files),
-            'Formatting libritts',
+            'Downloading libritts',
             total=len(audio_files))
         for audio_file, text_file in iterator:
 
             # Get file metadata
-            speaker, book, chapter, utterance = [
+            speaker, *_ = [
                 int(part) for part in audio_file.stem.split('_')]
 
-            # Update speaker and get current entry
+            # Get current speaker count entry
             if speaker not in speaker_count:
-
-                # Each entry is (index, count)
                 speaker_count[speaker] = [len(speaker_count), 0]
-
-            speaker_count[speaker][1] += 1
             index, count = speaker_count[speaker]
 
             # Load audio
@@ -260,21 +289,8 @@ def libritts():
                 pyfoal.SAMPLE_RATE)
             shutil.copyfile(text_file, output_file.with_suffix('.txt'))
 
-            # Update context
-            if (
-                prev_parts is not None and
-                prev_parts == (speaker, book, chapter, utterance - 1)
-            ):
-                prev_stem = f'{index:04d}/{count - 1:06d}'
-                context[stem] = { 'prev': prev_stem, 'next': None }
-                context[prev_stem]['next']: stem
-            else:
-                context[stem] = { 'prev': None, 'next': None }
-            prev_parts = (speaker, book, chapter, utterance)
-
-        # Save context information
-        with open('context.json', 'w') as file:
-            json.dump(context, file, indent=4, sort_keys=True)
+            # Update speaker count
+            speaker_count[speaker][1] += 1
 
 
 ###############################################################################

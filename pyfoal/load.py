@@ -42,6 +42,12 @@ def phonemes():
     return getattr(phonemes, pyfoal.ALIGNER)
 
 
+def text(file):
+    """Load text from disk"""
+    with open(file) as file:
+        return file.read()
+
+
 def voicing():
     """Load a map that indicates whether each phoneme is voiced"""
     # Cache voicing
