@@ -1,7 +1,9 @@
+import json
 import re
 import requests
 import shutil
 import tarfile
+from pathlib import Path
 
 import pypar
 import torchaudio
@@ -178,8 +180,101 @@ def arctic():
 
 def libritts():
     """Download libritts dataset"""
-    # TODO
-    pass
+    # Create directory for downloads
+    source_directory = pyfoal.SOURCE_DIR / 'libritts'
+    source_directory.mkdir(exist_ok=True, parents=True)
+    
+    # Create directory for unpacking
+    data_directory = pyfoal.DATA_DIR / 'libritts'
+    data_directory.mkdir(exist_ok=True, parents=True)
+    
+    # Download and unpack
+    for partition in [
+        'train-clean-100', 
+        'train-clean-360',
+        'dev-clean',
+        'test-clean']:
+
+        # Download
+        url = f'https://us.openslr.org/resources/60/{partition}.tar.gz'
+        file = source_directory / f'libritts-{partition}.tar.gz'
+        download_file(url, file)
+
+        # Unpack
+        with tarfile.open(file, 'r:gz') as tfile:
+            tfile.extractall(pyfoal.DATA_DIR)
+
+    # Uncapitalize directory name
+    shutil.rmtree(str(data_directory), ignore_errors=True)
+    shutil.move(
+        str(pyfoal.DATA_DIR / 'LibriTTS'),
+        str(data_directory),
+        copy_function=shutil.copytree)
+
+    # File locations
+    audio_files = sorted(data_directory.rglob('*.wav'))
+    text_files = [
+        file.with_suffix('.normalized.txt') for file in audio_files]
+
+    # Track previous and next utterances
+    context = {}
+    prev_parts = None
+
+    # Write audio to cache
+    speaker_count = {}
+    cache_directory = pyfoal.CACHE_DIR / 'libritts'
+    cache_directory.mkdir(exist_ok=True, parents=True)
+    with pyfoal.data.chdir(cache_directory):
+
+        # Iterate over files
+        iterator = pyfoal.iterator(
+            zip(audio_files, text_files),
+            'Formatting libritts',
+            total=len(audio_files))
+        for audio_file, text_file in iterator:
+
+            # Get file metadata
+            speaker, book, chapter, utterance = [
+                int(part) for part in audio_file.stem.split('_')]
+
+            # Update speaker and get current entry
+            if speaker not in speaker_count:
+
+                # Each entry is (index, count)
+                speaker_count[speaker] = [len(speaker_count), 0]
+
+            speaker_count[speaker][1] += 1
+            index, count = speaker_count[speaker]
+
+            # Load audio
+            audio, sample_rate = torchaudio.load(audio_file)
+
+            # Save at system sample rate
+            stem = f'{index:04d}/{count:06d}'
+            output_file = Path(f'{stem}.wav')
+            output_file.parent.mkdir(exist_ok=True, parents=True)
+            audio = pyfoal.resample(audio, sample_rate)
+            torchaudio.save(
+                output_file.parent / f'{output_file.stem}.wav',
+                audio,
+                pyfoal.SAMPLE_RATE)
+            shutil.copyfile(text_file, output_file.with_suffix('.txt'))
+
+            # Update context
+            if (
+                prev_parts is not None and
+                prev_parts == (speaker, book, chapter, utterance - 1)
+            ):
+                prev_stem = f'{index:04d}/{count - 1:06d}'
+                context[stem] = { 'prev': prev_stem, 'next': None }
+                context[prev_stem]['next']: stem
+            else:
+                context[stem] = { 'prev': None, 'next': None }
+            prev_parts = (speaker, book, chapter, utterance)
+
+        # Save context information
+        with open('context.json', 'w') as file:
+            json.dump(context, file, indent=4, sort_keys=True)
 
 
 ###############################################################################
