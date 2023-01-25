@@ -1,3 +1,6 @@
+import os
+
+import numpy as np
 import pypar
 import torch
 
@@ -26,31 +29,46 @@ class Dataset(torch.utils.data.Dataset):
         stem = dataset.stems[index]
 
         # Load phoneme indices
-        text = torch.load(dataset.cache / 'text' / f'{stem}.pt')
+        phonemes = torch.load(dataset.cache / f'{stem}.pt')
 
         # Load audio
-        audio = pyfoal.load.audio(dataset.cache / 'audio' / f'{stem}.wav')
+        audio = pyfoal.load.audio(dataset.cache / f'{stem}.wav')
+
+        # Compute prior
+        prior = pyfoal.data.preprocess.prior(
+            phonemes.shape[-1],
+            pyfoal.convert.samples_to_frames(audio.shape[-1]))
 
         # Maybe load true alignment
         if dataset.name == 'arctic':
             alignment = pypar.Alignment(
                 dataset.cache / 'alignment' / f'{stem}.TextGrid')
-
-            # Compute word bounds from alignment
-            bounds = alignment.word_bounds(
-                pyfoal.SAMPLE_RATE,
-                pyfoal.HOPSIZE,
-                silences=True)
-            bounds = torch.cat(
-                [torch.tensor(bound)[None] for bound in bounds]).T
         else:
-            bounds = None
+            alignment = None
 
-        return text, audio, bounds, stem
+        # Load text
+        text = pyfoal.load.text(dataset.cache / f'{stem}.txt')
+
+        return phonemes, audio, prior, alignment, text, stem
 
     def __len__(self):
         """Length of the dataset"""
         return sum(len(dataset) for dataset in self.datasets)
+
+    def buckets(self):
+        """Partition indices into buckets based on length for sampling"""
+        # Get the size of a bucket
+        size = len(self) // pyfoal.BUCKETS
+
+        # Get indices in order of length
+        lengths = []
+        for i in range(len(self)):
+            index, dataset = self.get_dataset(i)
+            lengths.append(dataset.lengths[index])
+        indices = np.argsort(lengths)
+
+        # Split into buckets based on length
+        return [indices[i:i + size] for i in range(0, len(self), size)]
 
     def get_dataset(self, index):
         """Retrieve the dataset to index and index into the datset"""
@@ -79,6 +97,13 @@ class Metadata:
         self.name = name
         self.cache = pyfoal.CACHE_DIR / name
         self.stems = pyfoal.load.partition(name)[partition]
+
+        # Store lengths for bucketing
+        audio_files = list([
+            self.cache / f'{stem}.wav' for stem in self.stems])
+        self.lengths = [
+            os.path.getsize(audio_file) // (2 * pyfoal.HOPSIZE)
+            for audio_file in audio_files]
 
     def __len__(self):
         return len(self.stems)

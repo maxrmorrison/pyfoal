@@ -2,6 +2,7 @@ import contextlib
 import functools
 import os
 
+import pypar
 import torch
 import torchaudio
 import tqdm
@@ -52,11 +53,11 @@ def from_text_and_audio(
         # Preprocess
         phonemes, audio = preprocess(text, audio, sample_rate)
 
-        # Align
-        attention = infer(phonemes.to(device), audio.to(device), checkpoint)
+        # Infer
+        logits = infer(phonemes.to(device), audio.to(device), checkpoint)
 
         # Postprocess
-        return postprocess(attention)
+        return postprocess(logits)
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -241,14 +242,38 @@ def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
     # Move model to correct device (no-op if devices are the same)
     infer.model = infer.model.to(phonemes.device)
 
-    # Infer
-    return infer.model(phonemes, audio)
+    with inference_context(infer.model):
+
+        # Get prior distribution
+        prior = pyfoal.data.preprocess.prior(
+            phonemes.shape[-1],
+            pyfoal.convert.samples_to_frames(audio.shape[-1]))
+
+        # Infer
+        return infer.model(phonemes, audio, prior)
 
 
-def postprocess(text, phonemes, attention):
-    """Postprocess attention alignment"""
-    # TODO
-    pass
+def postprocess(logits):
+    """Postprocess logits to produce alignment"""
+    # Get phoneme indices and number of frames per phoneme
+    indices, counts = torch.unique_consecutive(
+        logits.argmax(dim=0),
+        return_counts=True)
+
+    # Convert phoneme indices to phonemes
+    phonemes = pyfoal.convert.indices_to_phonemes(indices)
+
+    # Get times in seconds
+    times = pyfoal.convert.frames_to_seconds(
+        torch.cumsum(torch.cat(torch.zeros(1), counts)))
+
+    # Match phonemes and start/end times
+    # TODO - word-to-phoneme mapping
+    alignment = [
+        pypar.Word(phoneme, pypar.Phoneme(phoneme, start, end))
+        for phoneme, start, end in zip(phonemes[0], times[:-1], times[1:])]
+
+    return pypar.Alignment(alignment)
 
 
 def preprocess(text, audio, sample_rate):
@@ -276,6 +301,28 @@ def chdir(directory):
         yield
     finally:
         os.chdir(previous_directory)
+
+
+@contextlib.contextmanager
+def inference_context(model):
+    device_type = next(model.parameters()).device.type
+
+    # Prepare model for evaluation
+    model.eval()
+
+    # Turn off gradient computation
+    with torch.no_grad():
+
+        # Automatic mixed precision on GPU
+        if device_type == 'cuda':
+            with torch.autocast(device_type):
+                yield
+
+        else:
+            yield
+
+    # Prepare model for training
+    model.train()
 
 
 def iterator(iterable, message, initial=0, total=None):

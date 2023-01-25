@@ -88,11 +88,13 @@ For more help with HTK installation, see notes by
 ### Force-align text and audio
 
 ```python
-alignment = pyfoal.from_text_and_audio(text, audio, sample_rate)
+alignment = pyfoal.from_text_and_audio(text, audio, sample_rate, gpu=gpu)
 ```
 
-`text` is a string containing the speech transcript.
-`audio` is a 1D numpy array containing the speech audio.
+`text` is a string containing the speech transcript
+`audio` is a torc containing the speech audio
+`sample_rate` is the integer sampling rate
+`gpu` is the integer index of the GPU to run alignment on (or `None` for CPU)
 
 
 ### Force-align from files
@@ -211,7 +213,7 @@ is the GPU index.
 
 ### Plot
 
-**TODO** - alignment plot
+**TODO**
 
 
 ## References

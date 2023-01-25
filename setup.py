@@ -13,11 +13,13 @@ setup(
     author_email='maxrmorrison@gmail.com',
     url='https://github.com/maxrmorrison/pyfoal',
     install_requires=[
-        'g2p_en',  # TODO - make optional
+        'g2p_en',
+        'numpy',
+        'phonemizer',
         'pypar',
         'requests',
-        'resampy',  # TODO - replace
-        'soundfile',  # TODO - replace
+        'scipy',
+        'soundfile',
         'torch',
         'torchaudio',
         'tqdm',
@@ -26,6 +28,13 @@ setup(
     package_data={'pyfoal': ['assets/*', 'assets/*/*']},
     long_description=long_description,
     long_description_content_type='text/markdown',
-    keywords=['align', 'duration', 'p2fa', 'phoneme', 'speech'],
+    keywords=[
+        'align',
+        'alignment',
+        'attention',
+        'duration',
+        'phoneme',
+        'speech',
+        'word'],
     classifiers=['License :: OSI Approved :: MIT License'],
     license='MIT')

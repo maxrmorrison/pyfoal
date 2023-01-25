@@ -13,11 +13,11 @@ import pyfoal
 
 
 def run(
-        datasets,
-        checkpoint_directory,
-        output_directory,
-        log_directory,
-        gpus=None):
+    datasets,
+    checkpoint_directory,
+    output_directory,
+    log_directory,
+    gpus=None):
     """Run model training"""
     # Distributed data parallelism
     if gpus and len(gpus) > 1:
@@ -53,11 +53,11 @@ def run(
 
 
 def train(
-        datasets,
-        checkpoint_directory,
-        output_directory,
-        log_directory,
-        gpu=None):
+    datasets,
+    checkpoint_directory,
+    output_directory,
+    log_directory,
+    gpu=None):
     """Train a model"""
     # Get DDP rank
     if torch.distributed.is_initialized():
@@ -134,22 +134,23 @@ def train(
         model.train()
         for batch in train_loader:
 
-            # TODO - Unpack batch
-            (
-            ) = (item.to(device) for item in batch)
-
-            # Bundle training input
-            model_input = (""" TODO - pack network input""")
+            # Unpack batch
+            phonemes, audio, priors, mask, phoneme_lengths, frame_lengths, *_ = batch
 
             with torch.autocast(device.type):
 
                 # Forward pass
-                # TODO - unpack network output
-                (
-                ) = model(*model_input)
+                logits = model(
+                    phonemes.to(device),
+                    audio.to(device),
+                    priors.to(device),
+                    mask.to(device))
 
-                # TODO - compute losses
-                losses = 0.
+                # Compute loss
+                losses = loss(
+                    logits,
+                    phoneme_lengths.to(device),
+                    frame_lengths.to(device))
 
             ######################
             # Optimize model #
@@ -227,26 +228,50 @@ def evaluate(directory, step, model, gpu, condition, loader):
     """Perform model evaluation"""
     device = torch.device('cpu' if gpu is None else f'cuda:{gpu}')
 
+    # Setup evaluation metrics
+    metrics = pyfoal.evaluate.Metrics()
+
     # Prepare model for inference
-    with pyfoal.inference_context(model, device.type) as model:
+    with pyfoal.inference_context(model):
 
         for i, batch in enumerate(loader):
 
-            # TODO - unpack batch
-            () = batch
+            # Unpack batch
+            (
+                phonemes,
+                audio,
+                priors,
+                mask,
+                phoneme_lengths,
+                frame_lengths,
+                targets,
+                *_
+            ) = batch
 
-            # TODO - send to device and forward pass
+            # Forward pass
+            logits = model(
+                phonemes.to(device),
+                audio.to(device),
+                priors.to(device),
+                mask.to(device))
 
-            # TODO - update metrics
+            # Update metrics
+            metrics.update(
+                logits,
+                phoneme_lengths.to(device),
+                frame_lengths.to(device),
+                targets)
 
             # Stop when we exceed some number of batches
             if i + 1 == pyfoal.LOG_STEPS:
                 break
 
-    # TODO - write to tensorboard
+    # Format results
+    scalars = {
+        f'{key}/{condition}': value for key, value in metrics().items()}
 
-    # Prepare model for training
-    model.train()
+    # Write to tensorboard
+    pyfoal.write.scalars(directory, step, scalars)
 
 
 ###############################################################################
@@ -281,3 +306,36 @@ def ddp_context(rank, world_size):
 
         # Close ddp
         torch.distributed.destroy_process_group()
+
+
+###############################################################################
+# Utilities
+###############################################################################
+
+
+def loss(logits, phoneme_lengths, frame_lengths):
+    # Pad logits
+    logits = torch.nn.functional.pad(logits, (1, 0), value=-1)
+
+    total = 0.
+    iterator = zip(logits, phoneme_lengths, frame_lengths)
+    for logit, phoneme_length, frame_length in iterator:
+
+        # Make ground truth targets
+        target_seq = torch.arange(1, phoneme_length + 1).unsqueeze(0)
+
+        # Compute log probabilities
+        log_prob = torch.nn.functional.log_softmax(
+            logit[:frame_length, :phoneme_length + 1],
+            dim=2)
+
+        # Compute CTC loss
+        total += torch.nn.functional.ctc_loss(
+            log_prob,
+            target_seq,
+            input_lengths=frame_length[None],
+            target_lengths=phoneme_length[None],
+            zero_infinity=True)
+
+    # Average
+    return total / logits.shape[0]

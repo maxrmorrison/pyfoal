@@ -24,6 +24,10 @@ SAMPLE_RATE = 16000  # samples per second
 ###############################################################################
 
 
+# Number of buckets to partition training and validation data into based on
+# length to avoid excess padding
+BUCKETS = 8
+
 # Names of all datasets
 DATASETS = ['arctic', 'libritts']
 
@@ -99,6 +103,9 @@ RANDOM_SEED = 1234
 ###############################################################################
 
 
+# Scale factor for the beta-binomial attention prior
+ATTENTION_PRIOR_SCALE_FACTOR = .05
+
 # Sampling temperature
 TEMPERATURE = .0005
 
@@ -155,5 +162,5 @@ CMU_PHONEMES = [
 ]
 
 # IPA phoneme set
-# TODO
+# TODO - ipa phonemes
 IPA_PHONEMES = []

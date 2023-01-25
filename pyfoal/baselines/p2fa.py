@@ -8,7 +8,6 @@ from pathlib import Path
 
 import g2p_en
 import pypar
-import resampy
 import soundfile
 
 import pyfoal
@@ -28,20 +27,19 @@ SAMPLE_RATE = 11025
 ###############################################################################
 
 
-def align(text, audio, sample_rate):
+def from_text_and_audio(text, audio, sample_rate=pyfoal.SAMPLE_RATE):
     """Align text and audio using P2FA"""
     duration = len(audio) / sample_rate
 
     # Maybe resample
-    if sample_rate != SAMPLE_RATE:
-        resampy.resample(audio, sample_rate, SAMPLE_RATE)
+    audio = pyfoal.resample(audio, sample_rate, SAMPLE_RATE)
 
     # Cache aligner
-    if not hasattr(align, 'aligner'):
-        align.aligner = Aligner()
+    if not hasattr(from_text_and_audio, 'aligner'):
+        from_text_and_audio.aligner = Aligner()
 
     # Perform forced alignment
-    return align.aligner(text, audio, duration)
+    return from_text_and_audio.aligner(text, audio, duration)
 
 
 def from_file(text_file, audio_file):
@@ -53,7 +51,7 @@ def from_file(text_file, audio_file):
     audio, sample_rate = pyfoal.load.audio(audio_file)
 
     # Align
-    return align(text, audio, sample_rate)
+    return from_text_and_audio(text, audio, sample_rate)
 
 
 def from_file_to_file(text_file, audio_file, output_file):

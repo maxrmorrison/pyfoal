@@ -17,7 +17,7 @@ import pyfoal
 ###############################################################################
 
 
-def align(text, audio, sample_rate):
+def from_text_and_audio(text, audio, sample_rate=pyfoal.SAMPLE_RATE):
     """Align text and audio using MFA"""
     # Write to temporary storage
     with tempfile.TemporaryDirectory() as directory:
@@ -45,7 +45,7 @@ def from_file(text_file, audio_file):
     audio, sample_rate = pyfoal.load.audio(audio_file)
 
     # Align
-    return align(text, audio, sample_rate)
+    return from_text_and_audio(text, audio, sample_rate)
 
 
 def from_file_to_file(text_file, audio_file, output_file):
