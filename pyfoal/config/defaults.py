@@ -15,8 +15,20 @@ CONFIG = 'pyfoal'
 ###############################################################################
 
 
+# Audio hopsize
+HOPSIZE = 160  # samples
+
+# Number of melspectrogram channels
+NUM_MELS = 80
+
+# Number of spectrogram channels
+NUM_FFT = 1024
+
 # The audio sampling rate
 SAMPLE_RATE = 16000  # samples per second
+
+# Analysis window size
+WINDOW_SIZE = 1024
 
 
 ###############################################################################
@@ -92,7 +104,7 @@ CHECKPOINT_INTERVAL = 25000  # steps
 STEPS = 300000
 
 # Number of data loading worker threads
-NUM_WORKERS = 2
+NUM_WORKERS = 4
 
 # Seed for all random number generators
 RANDOM_SEED = 1234

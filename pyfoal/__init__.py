@@ -28,6 +28,7 @@ from . import baselines
 from . import convert
 from . import data
 from . import evaluate
+from . import g2p
 from . import interpolate
 from . import load
 from . import model

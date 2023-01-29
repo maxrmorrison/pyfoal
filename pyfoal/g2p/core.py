@@ -19,8 +19,8 @@ def from_text(text):
             f'Grapheme-to-phoneme method {pyfoal.G2P} is not defined')
 
     # Convert to torch
-    return torch.tensor([
-        pyfoal.convert.phoneme_to_index(phoneme) for phoneme in phonemes],
+    return torch.tensor(
+        [pyfoal.convert.phoneme_to_index(phoneme) for phoneme in phonemes],
         dtype=torch.long)
 
 

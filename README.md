@@ -213,7 +213,7 @@ is the GPU index.
 
 ### Plot
 
-**TODO**
+**TODO** - alignment plot
 
 
 ## References

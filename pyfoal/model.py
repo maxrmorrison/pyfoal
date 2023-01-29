@@ -18,24 +18,39 @@ class Model(torch.nn.Module):
         n_mel_channels=80,
         n_text_channels=512):
         super().__init__()
-        conv_fn = functools.partial(torch.nn.Conv1d, padding='same')
+        # Text embedding
+        text_channels = pyfoal.PHONEME_EMBEDDING_SIZE
+        self.embedding = torch.nn.Embedding(
+            len(pyfoal.PHONEMES),
+            text_channels)
 
-        # TODO - add embedding layer and encoder (3 1d conv)
+        # Text encoding
+        conv_fn = functools.partial(torch.nn.Conv1d, padding='same')
         self.key_encoder = torch.nn.Sequential(
+            conv_fn(text_channels, text_channels, kernel_size=5),
+            torch.nn.ReLU(),
+            conv_fn(text_channels, text_channels, kernel_size=5),
+            torch.nn.ReLU(),
+            conv_fn(text_channels, text_channels, kernel_size=5),
+            torch.nn.ReLU(),
             conv_fn(n_text_channels, 2 * n_text_channels, kernel_size=3),
             torch.nn.ReLU(),
-            conv_fn(2 * n_text_channels, n_mel_channels, kernel_size=1))
+            conv_fn(2 * n_text_channels, pyfoal.NUM_MELS, kernel_size=1))
+
+        # Mel encoding
         self.query_encoder = torch.nn.Sequential(
-            conv_fn(n_mel_channels, 2 * n_mel_channels, kernel_size=3),
+            conv_fn(pyfoal.NUM_MELS, 2 * pyfoal.NUM_MELS, kernel_size=3),
             torch.nn.ReLU(),
-            conv_fn(2 * n_mel_channels, n_mel_channels, kernel_size=1),
+            conv_fn(2 * pyfoal.NUM_MELS, pyfoal.NUM_MELS, kernel_size=1),
             torch.nn.ReLU(),
-            conv_fn(n_mel_channels, n_mel_channels, kernel_size=1))
+            conv_fn(pyfoal.NUM_MELS, pyfoal.NUM_MELS, kernel_size=1))
 
     def forward(self, phonemes, audio, mask=None, attention_prior=None):
         # Compute melspectrogram
-        # TODO - melspectrogram
-        mels = None
+        mels = pyfoal.data.preprocess.mels.from_audio(audio)
+
+        # Encode text
+        phonemes = self.embedding(phonemes).transpose(1, 2)
 
         # Isotropic Gaussian attention
         # Input shape: (

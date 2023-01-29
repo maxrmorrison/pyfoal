@@ -1,3 +1,3 @@
 from .core import *
-from . import cpu
+from . import cmu
 from . import ipa

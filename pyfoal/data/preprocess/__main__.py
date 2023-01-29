@@ -19,4 +19,4 @@ def parse_args():
     return parser.parse_args()
 
 
-pyfoal.preprocess.datasets(**vars(parse_args()))
+pyfoal.data.preprocess.datasets(**vars(parse_args()))
