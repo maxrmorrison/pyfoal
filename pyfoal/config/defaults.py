@@ -52,23 +52,28 @@ EVALUATION_DATASETS = ['arctic']
 ###############################################################################
 
 
+# Root location for saving outputs
+# TEMPORARY
+# ROOT_DIR = Path(__file__).parent.parent.parent
+ROOT_DIR = Path('/data/max/pyfoal')
+
 # Location to save assets to be bundled with pip release
 ASSETS_DIR = Path(__file__).parent.parent / 'assets'
 
 # Location of preprocessed features
-CACHE_DIR = Path(__file__).parent.parent.parent / 'data' / 'cache'
+CACHE_DIR = ROOT_DIR / 'data' / 'cache'
 
 # Location of datasets on disk
-DATA_DIR = Path(__file__).parent.parent.parent / 'data' / 'datasets'
+DATA_DIR = ROOT_DIR / 'data' / 'datasets'
 
 # Location to save evaluation artifacts
-EVAL_DIR = Path(__file__).parent.parent.parent / 'eval'
+EVAL_DIR = ROOT_DIR / 'eval'
 
 # Location to save training and adaptation artifacts
-RUNS_DIR = Path(__file__).parent.parent.parent / 'runs'
+RUNS_DIR = ROOT_DIR / 'runs'
 
 # Location of compressed datasets on disk
-SOURCES_DIR = Path(__file__).parent.parent.parent / 'data' / 'sources'
+SOURCES_DIR = ROOT_DIR / 'data' / 'sources'
 
 
 ###############################################################################
@@ -174,5 +179,27 @@ CMU_PHONEMES = [
 ]
 
 # IPA phoneme set
-# TODO - ipa phonemes
-IPA_PHONEMES = []
+class IPA:
+    space_char = " "
+    eos_punctuations = ".?!"
+    bos_punctuations = "¿¡"
+    other_punctuations = ';:,…"'
+    vowels = "iyɨʉɯuɪʏʊeøɘəɵɤoɛœɜɞʌɔæɐaɶɑɒᵻ"
+    non_pulmonic_constants = "ʘɓǀɗǃʄǂɠǁʛ"
+    pulmonic_constants = "pbtdʈɖcɟkɡqɢʔɴŋɲɳnɱmʙrʀⱱɾɽɸβfvθðszʃʒʂʐçʝxɣχʁħʕhɦɬɮʋɹɻjɰlɭʎʟ"
+    suprasegmentals = "ˈˌːˑ"
+    other_symbols = "ʍwɥʜʢʡɕʑɺɧʲ"
+    diacrilics = "ɚ˞ɫ"
+    accents = " ̃ ̪ ̩"[1::2]  # indexing because weirdly each character is length 2
+    ignore = "1-"
+    phonemes = (
+        vowels
+        + non_pulmonic_constants
+        + pulmonic_constants
+        + suprasegmentals
+        + other_symbols
+        + diacrilics
+    )
+    punctuations = eos_punctuations + bos_punctuations + other_punctuations
+    vocab = space_char + punctuations + phonemes + accents
+IPA_PHONEMES = IPA.vocab
