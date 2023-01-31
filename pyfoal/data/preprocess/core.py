@@ -20,7 +20,7 @@ def datasets(datasets):
         directory = pyfoal.CACHE_DIR / dataset
 
         # Get text files
-        text_files = directory.rglob('*.txt')
+        text_files = list(directory.rglob('*.txt'))
 
         # Get output phoneme files
         phoneme_files = [file.with_suffix('.pt') for file in text_files]

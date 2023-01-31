@@ -4,11 +4,11 @@
 # $1 - list of indices of GPUs to use
 
 # Download datasets
-python -m pyfoal.data.download
+# python -m pyfoal.data.download
 
 # Setup experiments
 python -m pyfoal.data.preprocess
-python -m pyfoal.partition
+# python -m pyfoal.partition
 
 # Train
 python -m pyfoal.train --config config/radtts.py --gpus $1

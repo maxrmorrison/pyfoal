@@ -43,6 +43,9 @@ BUCKETS = 8
 # Names of all datasets
 DATASETS = ['arctic', 'libritts']
 
+# Number of concurrent processes for espeak grapheme-to-phoneme
+ESPEAK_BATCH_SIZE = 256
+
 # Datasets for evaluation
 EVALUATION_DATASETS = ['arctic']
 
@@ -122,6 +125,9 @@ RANDOM_SEED = 1234
 
 # Scale factor for the beta-binomial attention prior
 ATTENTION_PRIOR_SCALE_FACTOR = .05
+
+# Width of the phoneme embedding
+PHONEME_EMBEDDING_SIZE = 512
 
 # Sampling temperature
 TEMPERATURE = .0005

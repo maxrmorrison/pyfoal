@@ -88,43 +88,67 @@ For more help with HTK installation, see notes by
 ### Force-align text and audio
 
 ```python
-alignment = pyfoal.from_text_and_audio(text, audio, sample_rate, gpu=gpu)
+import pyfoal
+
+# Load text
+text = pyfoal.load.text(text_file)
+
+# Load and resample audio
+audio = pyfoal.load.audio(audio_file)
+
+# Select an aligner. One of ['mfa', 'p2fa', 'radtts' (default)].
+aligner = 'radtts'
+
+# For RAD-TTS, select a model checkpoint
+checkpoint = pyfoal.DEFAULT_CHECKPOINT
+
+# Select a GPU to run inference on
+gpu = 0
+
+alignment = pyfoal.from_text_and_audio(
+    text,
+    audio,
+    pyfoal.SAMPLE_RATE,
+    aligner=aligner,
+    checkpoint=checkpoint,
+    gpu=gpu)
 ```
 
-`text` is a string containing the speech transcript
-`audio` is a torc containing the speech audio
-`sample_rate` is the integer sampling rate
-`gpu` is the integer index of the GPU to run alignment on (or `None` for CPU)
+
+### Application programming interface
 
 
-### Force-align from files
+### Application programming interface
 
-```python
-# Return the resulting alignment
-alignment = pyfoal.from_file(text_file, audio_file)
+#### `pyfoal.from_text_and_audio`
 
-# Save alignment to .json, .mlf, or .TextGrid
-pyfoal.from_file_to_file(text_file, audio_file, output_file)
+**TODO**
+
 ```
-
-If you need to align many files, use `from_files_to_files`, which accepts
-lists of files and uses multiprocessing.
-
-```python
-# Align many files at once
-# num_workers is the number of parallel jobs
-pyfoal.from_files_to_files(text_files, audio_files, output_files, num_workers)
 ```
 
 
-### Changing backend to use P2FA
+#### `pyfoal.from_file`
 
-```python
-# Change backend
-with pyfoal.backend('p2fa'):
+**TODO**
 
-    # Perform alignment
-    alignment = pyfoal.align(text, audio, sample_rate)
+```
+```
+
+
+#### `pyfoal.from_file_to_file`
+
+**TODO**
+
+```
+```
+
+
+#### `pyfoal.from_files_to_files`
+
+**TODO**
+
+```
 ```
 
 

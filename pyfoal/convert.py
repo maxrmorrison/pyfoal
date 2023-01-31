@@ -36,10 +36,15 @@ def phoneme_to_index(phoneme):
     # Cache map
     if not hasattr(phoneme_to_index, 'map'):
         phoneme_to_index.map = {
-            phoneme: i for i, phoneme in enumerate(pyfoal.load.phonemes())}
+            phoneme: i for i, phoneme in enumerate(pyfoal.PHONEMES)}
 
     # Convert
     return phoneme_to_index.map[str(phoneme)]
+
+
+def phonemes_to_indices(phonemes):
+    """Convert phoneme sequence to index sequence"""
+    return [phoneme_to_index(phoneme) for phoneme in phonemes]
 
 
 def index_to_phoneme(index):
@@ -47,12 +52,17 @@ def index_to_phoneme(index):
     # Cache map
     if not hasattr(index_to_phoneme, 'map'):
         index_to_phoneme.map = {
-            i: phoneme for i, phoneme in enumerate(pyfoal.load.phonemes())}
+            i: phoneme for i, phoneme in enumerate(pyfoal.PHONEMES)}
 
     # Convert
     return index_to_phoneme.map[index]
 
 
+def indices_to_phonemes(indices):
+    """Convert index sequence to phoneme sequence"""
+    return [index_to_phoneme(index) for index in indices]
+
+    
 def indices_to_alignment(indices, hopsize, word_breaks=None):
     """Convert framewise phoneme indices to a phoneme alignment"""
     # If no word breaks are given, populate an empty word

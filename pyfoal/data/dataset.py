@@ -17,8 +17,8 @@ class Dataset(torch.utils.data.Dataset):
 
     def __init__(self, datasets, partition):
         self.partition = partition
-        self.datasets = {
-            dataset: Metadata(dataset, partition) for dataset in datasets}
+        self.datasets = [
+            Metadata(dataset, partition) for dataset in datasets]
 
     def __getitem__(self, index):
         """Retrieve the indexth item"""

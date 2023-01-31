@@ -29,13 +29,17 @@ def from_file(text_file):
     return from_text(pyfoal.load.text(text_file))
 
 
-def from_file_to_file(text_file, ouptut_file):
+def from_file_to_file(text_file, output_file):
     """Convert text on disk to phonemes and save"""
-    torch.save(from_file(text_file), ouptut_file)
+    torch.save(from_file(text_file), output_file)
 
 
-def from_files_to_files(text_files, ouptut_files):
+def from_files_to_files(text_files, output_files):
     """Convert text on disk to phonemes and save"""
-    # TODO - multiprocessing
-    for text_file, ouptut_file in zip(text_files, ouptut_files):
-        from_files_to_files(text_file, ouptut_file)
+    if pyfoal.G2P == 'ipa':
+        pyfoal.g2p.ipa.from_files_to_files(text_files, output_files)
+    elif pyfoal.G2P == 'cmu':
+        for text_file, output_file in zip(text_files, output_files):
+            from_file_to_file(text_file, output_file)
+    raise ValueError(
+        f'Grapheme-to-phoneme method {pyfoal.G2P} is not defined')

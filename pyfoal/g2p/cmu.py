@@ -1,6 +1,9 @@
 import string
 
 import g2p_en
+import torch
+
+import pyfoal
 
 
 ###############################################################################
@@ -24,4 +27,9 @@ def from_text(text):
     text = text.translate(str.maketrans('-', ' ', ''.join(punctuation)))
 
     # Grapheme-to-phoneme conversion
-    return g2p_en.G2p()(text)
+    phonemes = g2p_en.G2p()(text)
+
+    # Convert to indices
+    indices = pyfoal.convert.phonemes_to_indices(phonemes)
+
+    return torch.tensor(indices, dtype=torch.long)
