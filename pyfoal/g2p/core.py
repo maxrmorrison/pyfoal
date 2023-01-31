@@ -1,3 +1,5 @@
+import multiprocessing
+
 import torch
 
 import pyfoal
@@ -36,10 +38,5 @@ def from_file_to_file(text_file, output_file):
 
 def from_files_to_files(text_files, output_files):
     """Convert text on disk to phonemes and save"""
-    if pyfoal.G2P == 'ipa':
-        pyfoal.g2p.ipa.from_files_to_files(text_files, output_files)
-    elif pyfoal.G2P == 'cmu':
-        for text_file, output_file in zip(text_files, output_files):
-            from_file_to_file(text_file, output_file)
-    raise ValueError(
-        f'Grapheme-to-phoneme method {pyfoal.G2P} is not defined')
+    with multiprocessing.Pool(pyfoal.NUM_WORKERS) as pool:
+        pool.starmap(from_file_to_file, zip(text_files, output_files))

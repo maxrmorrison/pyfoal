@@ -43,9 +43,6 @@ BUCKETS = 8
 # Names of all datasets
 DATASETS = ['arctic', 'libritts']
 
-# Number of concurrent processes for espeak grapheme-to-phoneme
-ESPEAK_BATCH_SIZE = 256
-
 # Datasets for evaluation
 EVALUATION_DATASETS = ['arctic']
 
@@ -112,7 +109,7 @@ CHECKPOINT_INTERVAL = 25000  # steps
 STEPS = 300000
 
 # Number of data loading worker threads
-NUM_WORKERS = 4
+NUM_WORKERS = 32
 
 # Seed for all random number generators
 RANDOM_SEED = 1234
