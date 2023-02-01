@@ -134,11 +134,14 @@ def arctic():
         output_directory = cache_directory / f'{index:04d}'
         output_directory.mkdir(exist_ok=True, parents=True)
 
-        # Get input files
-        alignment_files = sorted((input_directory / 'lab').rglob('*.lab'))
-        alignment_files = [
-            file for file in alignment_files if file.stem != '*']
+        # Get audio files
         audio_files = sorted((input_directory / 'wav').rglob('*.wav'))
+
+        # Get alignment files
+        # Note that one wav file is missing
+        alignment_files = [
+            input_directory / 'lab' / f'{file.stem}.lab'
+            for file in audio_files]
 
         # Save to cache
         i = 0

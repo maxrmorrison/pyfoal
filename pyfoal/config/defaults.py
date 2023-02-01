@@ -43,6 +43,9 @@ BUCKETS = 8
 # Names of all datasets
 DATASETS = ['arctic', 'libritts']
 
+# Number of text files per batch for espeak grapheme-to-phoneme
+ESPEAK_BATCH_SIZE = 1024
+
 # Datasets for evaluation
 EVALUATION_DATASETS = ['arctic']
 
@@ -109,7 +112,7 @@ CHECKPOINT_INTERVAL = 25000  # steps
 STEPS = 300000
 
 # Number of data loading worker threads
-NUM_WORKERS = 32
+NUM_WORKERS = 4
 
 # Seed for all random number generators
 RANDOM_SEED = 1234
@@ -186,7 +189,7 @@ class IPA:
     space_char = " "
     eos_punctuations = ".?!"
     bos_punctuations = "¿¡"
-    other_punctuations = ';:,…"'
+    other_punctuations = ';:,…"—'
     vowels = "iyɨʉɯuɪʏʊeøɘəɵɤoɛœɜɞʌɔæɐaɶɑɒᵻ"
     non_pulmonic_constants = "ʘɓǀɗǃʄǂɠǁʛ"
     pulmonic_constants = "pbtdʈɖcɟkɡqɢʔɴŋɲɳnɱmʙrʀⱱɾɽɸβfvθðszʃʒʂʐçʝxɣχʁħʕhɦɬɮʋɹɻjɰlɭʎʟ"
