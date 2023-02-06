@@ -91,7 +91,7 @@ def train(
     ##############################
     # Maybe load from checkpoint #
     ##############################
-
+    
     path = pyfoal.checkpoint.latest_path(checkpoint_directory, '*.pt')
 
     if path is not None:
@@ -128,7 +128,7 @@ def train(
         progress = pyfoal.iterator(
             range(step, steps),
             f'Training {pyfoal.CONFIG}',
-            steps)
+            total=steps)
     while step < steps:
 
         model.train()
@@ -233,7 +233,7 @@ def evaluate(directory, step, model, gpu, condition, loader):
 
     # Prepare model for inference
     with pyfoal.inference_context(model):
-
+        
         for i, batch in enumerate(loader):
 
             # Unpack batch
@@ -244,7 +244,6 @@ def evaluate(directory, step, model, gpu, condition, loader):
                 mask,
                 phoneme_lengths,
                 frame_lengths,
-                targets,
                 *_
             ) = batch
 
@@ -259,8 +258,7 @@ def evaluate(directory, step, model, gpu, condition, loader):
             metrics.update(
                 logits,
                 phoneme_lengths.to(device),
-                frame_lengths.to(device),
-                targets)
+                frame_lengths.to(device))
 
             # Stop when we exceed some number of batches
             if i + 1 == pyfoal.LOG_STEPS:
@@ -327,7 +325,7 @@ def loss(logits, phoneme_lengths, frame_lengths):
         # Compute log probabilities
         log_prob = torch.nn.functional.log_softmax(
             logit[:frame_length, :phoneme_length + 1],
-            dim=2)
+            dim=1)
 
         # Compute CTC loss
         total += torch.nn.functional.ctc_loss(

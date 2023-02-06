@@ -15,7 +15,9 @@ class Metrics:
         self.loss = Loss()
 
     def __call__(self):
-        return self.l1() | self.loss()
+        if self.l1.count > 0:
+            return self.l1() | self.loss()
+        return self.loss()
 
     def update(
         self,

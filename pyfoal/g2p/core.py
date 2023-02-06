@@ -1,5 +1,7 @@
 import multiprocessing
+import string
 
+import g2p_en
 import torch
 
 import pyfoal
@@ -11,19 +13,27 @@ import pyfoal
 
 
 def from_text(text):
-    """Convert text to phonemes"""
-    if pyfoal.G2P == 'cmu':
-        phonemes = pyfoal.g2p.cmu.from_text(text)
-    elif pyfoal.G2P == 'ipa':
-        phonemes = pyfoal.g2p.ipa.from_text(text)
-    else:
-        raise ValueError(
-            f'Grapheme-to-phoneme method {pyfoal.G2P} is not defined')
+    """Convert text to cmu"""
+    # Remove newlines, tabs, and extra whitespace
+    text = text.replace('\n', ' ')
+    text = text.replace('\t', ' ')
+    while '  ' in text:
+        text = text.replace('  ', ' ')
 
-    # Convert to torch
-    return torch.tensor(
-        [pyfoal.convert.phoneme_to_index(phoneme) for phoneme in phonemes],
-        dtype=torch.long)
+    # Convert numbers to text
+    text = g2p_en.expand.normalize_numbers(text)
+
+    # Remove punctuation
+    punctuation = [s for s in string.punctuation + '”“—' if s != '-']
+    text = text.translate(str.maketrans('-', ' ', ''.join(punctuation)))
+
+    # Grapheme-to-phoneme conversion
+    phonemes = g2p_en.G2p()(text)
+
+    # Convert to indices
+    indices = pyfoal.convert.phonemes_to_indices(phonemes)
+
+    return torch.tensor(indices, dtype=torch.long)
 
 
 def from_file(text_file):
@@ -38,11 +48,5 @@ def from_file_to_file(text_file, output_file):
 
 def from_files_to_files(text_files, output_files):
     """Convert text on disk to phonemes and save"""
-    if pyfoal.G2P == 'cmu':
-        with multiprocessing.Pool(pyfoal.NUM_WORKERS) as pool:
-            pool.starmap(from_file_to_file, zip(text_files, output_files))
-    elif pyfoal.G2P == 'ipa':
-        pyfoal.g2p.ipa.from_files_to_files(text_files, output_files)
-    else:
-        raise ValueError(
-            f'Grapheme-to-phoneme method {pyfoal.G2P} is not defined')
+    with multiprocessing.Pool(pyfoal.NUM_WORKERS) as pool:
+        pool.starmap(from_file_to_file, zip(text_files, output_files))

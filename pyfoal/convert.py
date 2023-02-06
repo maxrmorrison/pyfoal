@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pypar
 
@@ -31,28 +33,12 @@ def alignment_to_indices(
     return indices
 
 
-def phoneme_to_index(phoneme):
-    """Convert phoneme as a string to an integer index"""
-    # Cache map
-    if not hasattr(phoneme_to_index, 'map'):
-        phoneme_to_index.map = {
-            phoneme: i for i, phoneme in enumerate(pyfoal.PHONEMES)}
-
-    # Convert
-    return phoneme_to_index.map[str(phoneme)]
-
-
-def phonemes_to_indices(phonemes):
-    """Convert phoneme sequence to index sequence"""
-    return [phoneme_to_index(phoneme) for phoneme in phonemes]
-
-
 def index_to_phoneme(index):
     """Convert integer index representing a phoneme to a string"""
     # Cache map
     if not hasattr(index_to_phoneme, 'map'):
         index_to_phoneme.map = {
-            i: phoneme for i, phoneme in enumerate(pyfoal.PHONEMES)}
+            i: phoneme for i, phoneme in enumerate(pyfoal.load.phonemes())}
 
     # Convert
     return index_to_phoneme.map[index]
@@ -62,7 +48,7 @@ def indices_to_phonemes(indices):
     """Convert index sequence to phoneme sequence"""
     return [index_to_phoneme(index) for index in indices]
 
-    
+
 def indices_to_alignment(indices, hopsize, word_breaks=None):
     """Convert framewise phoneme indices to a phoneme alignment"""
     # If no word breaks are given, populate an empty word
@@ -108,6 +94,22 @@ def indices_to_alignment(indices, hopsize, word_breaks=None):
     return pypar.Alignment(words)
 
 
+def phoneme_to_index(phoneme):
+    """Convert phoneme as a string to an integer index"""
+    # Cache map
+    if not hasattr(phoneme_to_index, 'map'):
+        phoneme_to_index.map = {
+            phoneme: i for i, phoneme in enumerate(pyfoal.load.phonemes())}
+
+    # Convert
+    return phoneme_to_index.map[str(phoneme).upper()]
+
+
+def phonemes_to_indices(phonemes):
+    """Convert phoneme sequence to index sequence"""
+    return [phoneme_to_index(phoneme) for phoneme in phonemes]
+
+
 ###############################################################################
 # Time conversions
 ###############################################################################
@@ -116,3 +118,11 @@ def indices_to_alignment(indices, hopsize, word_breaks=None):
 def samples_to_seconds(samples, sample_rate=pyfoal.SAMPLE_RATE):
     """Convert time in samples to seconds"""
     return samples / sample_rate
+
+
+def samples_to_frames(samples):
+    """Convert time in samples to frames"""
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        return samples // pyfoal.HOPSIZE
+    

@@ -87,9 +87,6 @@ SOURCES_DIR = ROOT_DIR / 'data' / 'sources'
 # The method to use for forced alignment. One of ['mfa', 'p2fa', 'radtts'].
 ALIGNER = 'radtts'
 
-# The method to use for grapheme-to-phoneme conversion. One of ['cmu', 'ipa'].
-G2P = 'ipa'
-
 # Number of steps between tensorboard logging
 LOG_INTERVAL = 2500  # steps
 
@@ -112,7 +109,7 @@ CHECKPOINT_INTERVAL = 25000  # steps
 STEPS = 300000
 
 # Number of data loading worker threads
-NUM_WORKERS = 4
+NUM_WORKERS = 16
 
 # Seed for all random number generators
 RANDOM_SEED = 1234
@@ -131,81 +128,3 @@ PHONEME_EMBEDDING_SIZE = 512
 
 # Sampling temperature
 TEMPERATURE = .0005
-
-
-###############################################################################
-# Phoneme sets
-###############################################################################
-
-
-# CMU phoneme set
-CMU_PHONEMES = [
-	'aa',
-	'ae',
-	'ah',
-	'ao',
-	'aw',
-	'ay',
-	'b',
-	'ch',
-	'd',
-	'dh',
-	'eh',
-	'er',
-	'ey',
-	'f',
-	'g',
-	'hh',
-	'ih',
-	'iy',
-	'jh',
-	'k',
-	'l',
-	'm',
-	'n',
-	'ng',
-	'ow',
-	'oy',
-	'p',
-	'r',
-	's',
-	'sh',
-	't',
-	'th',
-	'uh',
-	'uw',
-	'v',
-	'w',
-	'y',
-	'z',
-	'zh',
-	'ax',
-	'sp',
-	'<unk>'
-]
-
-# IPA phoneme set
-class IPA:
-    space_char = " "
-    eos_punctuations = ".?!"
-    bos_punctuations = "¿¡"
-    other_punctuations = ';:,…"—'
-    vowels = "iyɨʉɯuɪʏʊeøɘəɵɤoɛœɜɞʌɔæɐaɶɑɒᵻ"
-    non_pulmonic_constants = "ʘɓǀɗǃʄǂɠǁʛ"
-    pulmonic_constants = "pbtdʈɖcɟkɡqɢʔɴŋɲɳnɱmʙrʀⱱɾɽɸβfvθðszʃʒʂʐçʝxɣχʁħʕhɦɬɮʋɹɻjɰlɭʎʟ"
-    suprasegmentals = "ˈˌːˑ"
-    other_symbols = "ʍwɥʜʢʡɕʑɺɧʲ"
-    diacrilics = "ɚ˞ɫ"
-    accents = " ̃ ̪ ̩"[1::2]  # indexing because weirdly each character is length 2
-    ignore = "1-"
-    phonemes = (
-        vowels
-        + non_pulmonic_constants
-        + pulmonic_constants
-        + suprasegmentals
-        + other_symbols
-        + diacrilics
-    )
-    punctuations = eos_punctuations + bos_punctuations + other_punctuations
-    vocab = space_char + punctuations + phonemes + accents
-IPA_PHONEMES = IPA.vocab

@@ -106,17 +106,15 @@ def arctic():
         download_tar_bz2(url.format(speaker), data_directory)
 
     # Download text data
-    download_file(
-        'http://festvox.org/cmu_arctic/cmuarctic.data',
-        data_directory / 'sentences.txt')
+    text_file = data_directory / 'sentences.txt'
+    download_file('http://festvox.org/cmu_arctic/cmuarctic.data', text_file)
 
     # Setup data directory
     cache_directory = pyfoal.CACHE_DIR / 'arctic'
     cache_directory.mkdir(parents=True, exist_ok=True)
 
     # Load text
-    text_file = data_directory / 'sentences.txt'
-    with open(text_file, 'r') as file:
+    with open(text_file) as file:
         content = file.read()
 
     # Write csv with text

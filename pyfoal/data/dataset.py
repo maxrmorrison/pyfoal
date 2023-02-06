@@ -29,15 +29,13 @@ class Dataset(torch.utils.data.Dataset):
         stem = dataset.stems[index]
 
         # Load phoneme indices
-        phonemes = torch.load(dataset.cache / f'{stem}.pt')
+        phonemes = torch.load(dataset.cache / f'{stem}-phonemes.pt')
 
         # Load audio
         audio = pyfoal.load.audio(dataset.cache / f'{stem}.wav')
 
         # Compute prior
-        prior = pyfoal.data.preprocess.prior(
-            phonemes.shape[-1],
-            pyfoal.convert.samples_to_frames(audio.shape[-1]))
+        prior = torch.load(dataset.cache / f'{stem}-prior.pt')
 
         # Maybe load true alignment
         if dataset.name == 'arctic':

@@ -65,7 +65,7 @@ def collate(batch):
         padded_priors[i, :frame_length, :phoneme_length] = prior
 
         # Create mask
-        mask[i, :frame_length, :phoneme_length] = 1
+        mask[i, :frame_length, :phoneme_length] = True
 
     return (
         padded_phonemes,

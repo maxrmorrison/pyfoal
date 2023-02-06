@@ -47,16 +47,25 @@ class Model(torch.nn.Module):
 
     def forward(self, phonemes, audio, mask=None, attention_prior=None):
         # Compute melspectrogram
+        # Input shape: (batch, 1, audio.shape[-1])
+        # Output shape: (
+        #   batch,
+        #   pyfoal.NUM_MELS,
+        #   pyfoal.convert.samples_to_frames(audio.shape[-1]))
         mels = pyfoal.data.preprocess.mels.from_audio(audio)
 
         # Encode text
-        phonemes = self.embedding(phonemes).transpose(1, 2)
+        # Input shape: (batch, 1, phonemes.shape[-1])
+        # Output shape: (
+        #   batch, pyfoal.PHONEME_EMBEDDING_SIZE, phonemes.shape[-1])
+        phonemes = self.embedding(phonemes.squeeze(1)).transpose(1, 2)
 
         # Isotropic Gaussian attention
         # Input shape: (
-        #   (batch, mel_channels, frames),
-        #   (batch, 1, phonemes))
-        # Output shape: (batch, mel_channels, frames, phonemes)
+        #   (batch, pyfoal.NUM_MELS, mels.shape[-1]),
+        #   (batch, pyfoal.PHONEME_EMBEDDING_SIZE, phonemes.shape[-1]))
+        # Output shape: (
+        #   batch, pyfoal.NUM_MELS, mels.shape[-1], phonemes.shape[-1])
         attention = (
             (
                 self.query_encoder(mels)[:, :, :, None] -
@@ -65,8 +74,9 @@ class Model(torch.nn.Module):
         )
 
         # Sum over channels and scale
-        # Input shape: (batch, mel_channels, frames, phonemes)
-        # Output shape: (batch, frames, phonemes)
+        # Input shape: (
+        #   batch, pyfoal.NUM_MELS, mels.shape[-1], phonemes.shape[-1])
+        # Output shape: (batch, mels.shape[-1], phonemes.shape[-1])
         attention = -pyfoal.TEMPERATURE * attention.sum(1)
 
         # Maybe add a prior distribution
@@ -77,6 +87,6 @@ class Model(torch.nn.Module):
 
         # Apply mask
         if mask is not None:
-            attention.data.masked_fill_(~mask, -float('inf'))
+            attention.data.masked_fill_(~mask.to(torch.bool), -float('inf'))
 
         return attention

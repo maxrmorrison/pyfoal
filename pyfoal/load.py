@@ -29,7 +29,15 @@ def phonemes():
     """Load list of phonemes"""
     # Cache phonemes
     if not hasattr(phonemes, pyfoal.ALIGNER):
-        with open(pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'phonemes.csv') as file:
+
+        # Get phoneme set file
+        if pyfoal.ALIGNER == 'p2fa':
+            file = 'p2fa-phonemes.csv'
+        else:
+            file = 'mfa-phonemes.csv'
+
+        # Load file
+        with open(pyfoal.ASSETS_DIR / 'g2p' / file) as file:
             reader = csv.reader(file)
 
             # Skip header
