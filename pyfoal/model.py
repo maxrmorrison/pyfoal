@@ -1,6 +1,5 @@
 import functools
 
-import numpy as np
 import torch
 
 import pyfoal
@@ -13,15 +12,12 @@ import pyfoal
 
 class Model(torch.nn.Module):
 
-    def __init__(
-        self,
-        n_mel_channels=80,
-        n_text_channels=512):
+    def __init__(self):
         super().__init__()
         # Text embedding
         text_channels = pyfoal.PHONEME_EMBEDDING_SIZE
         self.embedding = torch.nn.Embedding(
-            len(pyfoal.PHONEMES),
+            len(pyfoal.load.phonemes()),
             text_channels)
 
         # Text encoding
@@ -33,9 +29,9 @@ class Model(torch.nn.Module):
             torch.nn.ReLU(),
             conv_fn(text_channels, text_channels, kernel_size=5),
             torch.nn.ReLU(),
-            conv_fn(n_text_channels, 2 * n_text_channels, kernel_size=3),
+            conv_fn(text_channels, 2 * text_channels, kernel_size=3),
             torch.nn.ReLU(),
-            conv_fn(2 * n_text_channels, pyfoal.NUM_MELS, kernel_size=1))
+            conv_fn(2 * text_channels, pyfoal.NUM_MELS, kernel_size=1))
 
         # Mel encoding
         self.query_encoder = torch.nn.Sequential(

@@ -45,5 +45,7 @@ def from_file_to_file(text_file, audio_file, output_file):
 
 def from_files_to_files(text_files, audio_files, output_files):
     """Compute attention priors from files and save"""
-    with multiprocessing.Pool() as pool:
-        pool.starmap(from_file_to_file, zip(text_files, audio_files, output_files))
+    with multiprocessing.Pool(pyfoal.NUM_WORKERS) as pool:
+        pool.starmap(
+            from_file_to_file,
+            zip(text_files, audio_files, output_files))

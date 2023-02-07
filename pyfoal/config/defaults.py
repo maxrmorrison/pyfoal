@@ -43,9 +43,6 @@ BUCKETS = 8
 # Names of all datasets
 DATASETS = ['arctic', 'libritts']
 
-# Number of text files per batch for espeak grapheme-to-phoneme
-ESPEAK_BATCH_SIZE = 1024
-
 # Datasets for evaluation
 EVALUATION_DATASETS = ['arctic']
 

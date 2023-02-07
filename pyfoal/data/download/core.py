@@ -86,11 +86,11 @@ def arctic():
     """Download arctic dataset"""
     # Delete data if it already exists
     data_directory = pyfoal.DATA_DIR / 'arctic'
-    if data_directory.exists():
-        shutil.rmtree(str(data_directory))
+    # if data_directory.exists():
+    #     shutil.rmtree(str(data_directory))
 
     # Create data directory
-    data_directory.mkdir(parents=True)
+    # data_directory.mkdir(parents=True)
 
     # URL format string
     url = (
@@ -102,12 +102,12 @@ def arctic():
         ARCTIC_SPEAKERS,
         'Downloading arctic',
         total=len(ARCTIC_SPEAKERS))
-    for speaker in iterator:
-        download_tar_bz2(url.format(speaker), data_directory)
+    # for speaker in iterator:
+    #     download_tar_bz2(url.format(speaker), data_directory)
 
     # Download text data
     text_file = data_directory / 'sentences.txt'
-    download_file('http://festvox.org/cmu_arctic/cmuarctic.data', text_file)
+    # download_file('http://festvox.org/cmu_arctic/cmuarctic.data', text_file)
 
     # Setup data directory
     cache_directory = pyfoal.CACHE_DIR / 'arctic'
@@ -149,8 +149,9 @@ def arctic():
             try:
 
                 # Save text
+                sentence = sentences[audio_file.stem]
                 with open(output_directory / f'{i:06d}.txt', 'w') as file:
-                    file.write(sentences[audio_file.stem])
+                    file.write(sentence)
 
             except KeyError:
 
@@ -184,7 +185,7 @@ def arctic():
 
             # Handle out-of-domain tokens
             phonemes = [
-                phoneme if phoneme in pyfoal.PHONEMES else '<unk>'
+                phoneme if phoneme in pyfoal.load.phonemes() else '<unk>'
                 for phoneme in phonemes]
 
             # Correct end time
