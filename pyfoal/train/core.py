@@ -277,10 +277,21 @@ def evaluate(directory, step, model, gpu, condition, loader):
 ###############################################################################
 
 
-def train_ddp(rank, dataset, directory, gpus):
+def train_ddp(
+    rank,
+    dataset,
+    checkpoint_directory,
+    output_directory,
+    log_directory,
+    gpus):
     """Train with distributed data parallelism"""
     with ddp_context(rank, len(gpus)):
-        train(dataset, directory, gpus)
+        train(
+            dataset,
+            checkpoint_directory,
+            output_directory,
+            log_directory,
+            gpus[rank])
 
 
 @contextlib.contextmanager
@@ -288,7 +299,7 @@ def ddp_context(rank, world_size):
     """Context manager for distributed data parallelism"""
     # Setup ddp
     os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
+    os.environ['MASTER_PORT'] = '12356'
     torch.distributed.init_process_group(
         'nccl',
         init_method='env://',

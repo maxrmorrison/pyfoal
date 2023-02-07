@@ -161,7 +161,8 @@ def from_file_to_file(
         # Save
         alignment.save(output_file)
 
-    raise ValueError(f'Aligner {aligner} is not defined')
+    else:
+        raise ValueError(f'Aligner {aligner} is not defined')
 
 
 def from_files_to_files(
@@ -215,7 +216,8 @@ def from_files_to_files(
         for item in zip(text_files, audio_files, output_files):
             align_fn(*item)
 
-    raise ValueError(f'Aligner {aligner} is not defined')
+    else:
+        raise ValueError(f'Aligner {aligner} is not defined')
 
 
 ###############################################################################
@@ -268,7 +270,6 @@ def postprocess(logits):
         torch.cumsum(torch.cat(torch.zeros(1), counts)))
 
     # Match phonemes and start/end times
-    # TODO - word-to-phoneme mapping
     alignment = [
         pypar.Word(phoneme, pypar.Phoneme(phoneme, start, end))
         for phoneme, start, end in zip(phonemes[0], times[:-1], times[1:])]

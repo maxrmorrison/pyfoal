@@ -97,7 +97,7 @@ LOG_STEPS = 16
 
 
 # Batch size (per gpu)
-BATCH_SIZE = 64
+BATCH_SIZE = 16
 
 # Number of steps between saving checkpoints
 CHECKPOINT_INTERVAL = 25000  # steps
@@ -106,7 +106,7 @@ CHECKPOINT_INTERVAL = 25000  # steps
 STEPS = 300000
 
 # Number of data loading worker threads
-NUM_WORKERS = 16
+NUM_WORKERS = 32
 
 # Seed for all random number generators
 RANDOM_SEED = 1234

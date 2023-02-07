@@ -35,7 +35,7 @@ def from_file(text_file, audio_file):
         torchaudio.info(audio_file).num_frames)
 
     # Compute prior
-    return from_lengths(len(text), frames)
+    return from_lengths(len(pyfoal.g2p.from_text(text)), frames)
 
 
 def from_file_to_file(text_file, audio_file, output_file):
