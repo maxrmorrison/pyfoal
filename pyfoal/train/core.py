@@ -120,19 +120,19 @@ def train(
     # Automatic mixed precision (amp) gradient scaler
     scaler = torch.cuda.amp.GradScaler()
 
-    # Get total number of steps
-    steps = pyfoal.STEPS
-
     # Setup progress bar
     if not rank:
         progress = pyfoal.iterator(
-            range(step, steps),
+            range(step, pyfoal.STEPS),
             f'Training {pyfoal.CONFIG}',
-            total=steps)
-    while step < steps:
+            initial=step,
+            total=pyfoal.STEPS)
+    while step < pyfoal.STEPS:
 
         # Seed sampler
-        train_loader.sampler.set_epoch(step // len(train_loader.dataset))
+        train_loader.sampler.set_epoch(
+            (step + len(train_loader.dataset) - 1) //
+            len(train_loader.dataset))
 
         model.train()
         for batch in train_loader:
@@ -202,7 +202,7 @@ def train(
                         output_directory / f'{step:08d}.pt')
 
             # Update training step count
-            if step >= steps:
+            if step >= pyfoal.STEPS:
                 break
             step += 1
 
@@ -234,6 +234,9 @@ def evaluate(directory, step, model, gpu, condition, loader):
     # Setup evaluation metrics
     metrics = pyfoal.evaluate.Metrics()
 
+    # Tensorboard audio and figures
+    waveforms, figures = {}, {}
+
     # Prepare model for inference
     with pyfoal.inference_context(model):
         
@@ -242,18 +245,19 @@ def evaluate(directory, step, model, gpu, condition, loader):
             # Unpack batch
             (
                 phonemes,
-                audio,
+                audios,
                 priors,
                 mask,
                 phoneme_lengths,
                 frame_lengths,
+                stems,
                 *_
             ) = batch
 
             # Forward pass
             logits = model(
                 phonemes.to(device),
-                audio.to(device),
+                audios.to(device),
                 priors.to(device),
                 mask.to(device))
 
@@ -267,11 +271,35 @@ def evaluate(directory, step, model, gpu, condition, loader):
             if i + 1 == pyfoal.LOG_STEPS:
                 break
 
+            # Add audio and alignment plot
+            if i == 0 and condition == 'valid':
+                iterator = zip(
+                    audios[:pyfoal.PLOT_EXAMPLES],
+                    logits[:pyfoal.PLOT_EXAMPLES],
+                    stems[:pyfoal.PLOT_EXAMPLES],
+                    frame_lengths[:pyfoal.PLOT_EXAMPLES],
+                    phoneme_lengths[:pyfoal.PLOT_EXAMPLES])
+                for audio, logit, stem, frame_length, phoneme_length in iterator:
+
+                    # Add audio
+                    samples = pyfoal.convert.frames_to_samples(frame_length)
+                    waveforms[f'audio/{stem}'] = audio[:, :samples]
+
+                    # Add alignment figure
+                    logit = torch.nn.functional.log_softmax(
+                        logit[:frame_length, :phoneme_length],
+                        dim=1)
+                    logit[logit < -60.] = -60.
+                    figures[f'attention/{stem}'] = \
+                        pyfoal.plot.logits(logit.cpu())
+
     # Format results
     scalars = {
         f'{key}/{condition}': value for key, value in metrics().items()}
 
     # Write to tensorboard
+    pyfoal.write.audio(directory, step, waveforms)
+    pyfoal.write.figures(directory, step, figures)
     pyfoal.write.scalars(directory, step, scalars)
 
 

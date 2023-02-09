@@ -74,6 +74,6 @@ def collate(batch):
         mask,
         phoneme_lengths,
         frame_lengths,
+        stems,
         alignments,
-        text,
-        stems)
+        text)

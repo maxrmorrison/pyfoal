@@ -90,6 +90,9 @@ LOG_INTERVAL = 2500  # steps
 # Number of steps to perform for tensorboard logging
 LOG_STEPS = 16
 
+# Number of examples to plot to Tensorboard
+PLOT_EXAMPLES = 8
+
 
 ###############################################################################
 # Training parameters
@@ -97,7 +100,7 @@ LOG_STEPS = 16
 
 
 # Batch size (per gpu)
-BATCH_SIZE = 16
+BATCH_SIZE = 24
 
 # Number of steps between saving checkpoints
 CHECKPOINT_INTERVAL = 25000  # steps

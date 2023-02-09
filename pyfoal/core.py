@@ -328,13 +328,12 @@ def inference_context(model):
 
 def iterator(iterable, message, initial=0, total=None):
     """Create a tqdm iterator"""
-    total = len(iterable) if total is None else total
     return tqdm.tqdm(
         iterable,
         desc=message,
         dynamic_ncols=True,
         initial=initial,
-        total=total)
+        total=len(iterable) if total is None else total)
 
 
 def resample(audio, sample_rate, target_rate=pyfoal.SAMPLE_RATE):

@@ -57,9 +57,9 @@ def datasets(
                 _,
                 phoneme_lengths,
                 frame_lengths,
+                stem,
                 target,
-                text,
-                stem
+                text
             ) = batch
 
             # Montreal forced aligner

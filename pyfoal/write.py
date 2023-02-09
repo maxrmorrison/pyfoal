@@ -1,12 +1,14 @@
 from torch.utils.tensorboard import SummaryWriter
 
+import pyfoal
+
 
 ###############################################################################
 # Tensorboard logging
 ###############################################################################
 
 
-def audio(directory, step, audio, sample_rate):
+def audio(directory, step, audio, sample_rate=pyfoal.SAMPLE_RATE):
     """Write audio to Tensorboard"""
     for name, waveform in audio.items():
         writer(directory).add_audio(
