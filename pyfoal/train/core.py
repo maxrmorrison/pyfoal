@@ -131,6 +131,9 @@ def train(
             total=steps)
     while step < steps:
 
+        # Seed sampler
+        train_loader.sampler.set_epoch(step // len(train_loader.dataset))
+
         model.train()
         for batch in train_loader:
 

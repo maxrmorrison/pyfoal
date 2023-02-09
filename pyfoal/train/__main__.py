@@ -27,7 +27,7 @@ def main(config, datasets, gpus=None):
         gpus)
 
     # Evaluate
-    pyfoal.evaluate.datasets(datasets, directory, gpus)
+    pyfoal.evaluate.datasets(datasets, directory, gpus[0])
 
 
 def parse_args():

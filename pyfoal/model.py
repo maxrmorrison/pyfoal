@@ -41,7 +41,7 @@ class Model(torch.nn.Module):
             torch.nn.ReLU(),
             conv_fn(pyfoal.NUM_MELS, pyfoal.NUM_MELS, kernel_size=1))
 
-    def forward(self, phonemes, audio, mask=None, attention_prior=None):
+    def forward(self, phonemes, audio, prior=None, mask=None):
         # Compute melspectrogram
         # Input shape: (batch, 1, audio.shape[-1])
         # Output shape: (
@@ -76,10 +76,10 @@ class Model(torch.nn.Module):
         attention = -pyfoal.TEMPERATURE * attention.sum(1)
 
         # Maybe add a prior distribution
-        if attention_prior is not None:
+        if prior is not None:
             attention = (
                 torch.nn.functional.log_softmax(attention, dim=2) +
-                torch.log(attention_prior + 1e-8))
+                torch.log(prior + 1e-8))
 
         # Apply mask
         if mask is not None:
