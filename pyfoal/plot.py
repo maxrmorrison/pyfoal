@@ -1,6 +1,11 @@
 import matplotlib.pyplot as plt
 
 
+###############################################################################
+# Plots
+###############################################################################
+
+
 def logits(x):
     """Plot the network alignment output"""
     figure, axis = plt.subplots(figsize=(8, 8))

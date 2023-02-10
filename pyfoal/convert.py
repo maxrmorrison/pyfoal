@@ -115,7 +115,6 @@ def phonemes_to_indices(phonemes):
 ###############################################################################
 
 
-
 def frames_to_samples(frames):
     """Convert number of frames to samples"""
     return frames * pyfoal.HOPSIZE

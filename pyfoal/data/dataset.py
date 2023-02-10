@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pypar
 import torch
+import torchaudio
 
 import pyfoal
 
@@ -100,7 +101,8 @@ class Metadata:
         audio_files = list([
             self.cache / f'{stem}.wav' for stem in self.stems])
         self.lengths = [
-            os.path.getsize(audio_file) // (2 * pyfoal.HOPSIZE)
+            pyfoal.convert.samples_to_frames(
+                torchaudio.info(audio_file).num_frames)
             for audio_file in audio_files]
 
     def __len__(self):

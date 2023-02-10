@@ -53,7 +53,7 @@ def datasets(
             (
                 phonemes,
                 audio,
-                priors,
+                _,
                 _,
                 phoneme_lengths,
                 frame_lengths,

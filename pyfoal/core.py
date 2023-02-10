@@ -225,6 +225,22 @@ def from_files_to_files(
 ###############################################################################
 
 
+def decode(logits):
+    """Get phoneme indices and frame counts from network output"""
+    # Get phoneme index for each frame
+    if pyfoal.DECODER == 'argmax':
+        indices = logits.argmax(dim=0)
+    elif pyfoal.DECODER == 'viterbi':
+        # TODO 
+        pass
+    else:
+        raise ValueError(
+            f'Decoding method {pyfoal.DECODER} is not implemented')
+
+    # Count consecutive indices
+    return torch.unique_consecutive(indices, return_counts=True)
+
+
 def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
     """Perform forward pass to retrieve attention alignment"""
     # Maybe cache model
@@ -257,11 +273,9 @@ def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
 
 def postprocess(logits):
     """Postprocess logits to produce alignment"""
-    # Get phoneme indices and number of frames per phoneme
-    indices, counts = torch.unique_consecutive(
-        logits.argmax(dim=0),
-        return_counts=True)
-
+    # Get phoneme indices and frame counts from network output
+    indices, counts = decode(logits)
+    
     # Convert phoneme indices to phonemes
     phonemes = pyfoal.convert.indices_to_phonemes(indices)
 
