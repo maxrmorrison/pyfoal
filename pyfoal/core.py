@@ -3,6 +3,7 @@ import functools
 import os
 
 import pypar
+import torbi
 import torch
 import torchaudio
 import tqdm
@@ -227,15 +228,25 @@ def from_files_to_files(
 
 def decode(logits):
     """Get phoneme indices and frame counts from network output"""
-    # Get phoneme index for each frame
-    if pyfoal.DECODER == 'argmax':
-        indices = logits.argmax(dim=0)
-    elif pyfoal.DECODER == 'viterbi':
-        # TODO 
-        pass
-    else:
-        raise ValueError(
-            f'Decoding method {pyfoal.DECODER} is not implemented')
+    # Normalize
+    observation = torch.nn.functional.log_softmax(logits, dim=0)
+
+    # Always start at the first phoneme
+    initial = torch.zeros(
+        (logits.shape[1],),
+        dtype=logits.dtype,
+        device=logits.device)
+    
+    # Enforce monotonicity
+    transition = torch.triu(
+        torch.ones(
+            (logits.shape[1], logits.shape[1]),
+            dtype=logits.dtype,
+            device=logits.device))
+    transition /= transition.sum(dim=1, keepdims=True)
+
+    # Viterbi decoding
+    indices = torbi.decode(observation, transition, initial)
 
     # Count consecutive indices
     return torch.unique_consecutive(indices, return_counts=True)

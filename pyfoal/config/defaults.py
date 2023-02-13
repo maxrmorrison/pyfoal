@@ -106,7 +106,7 @@ BATCH_SIZE = 24
 CHECKPOINT_INTERVAL = 25000  # steps
 
 # Number of training steps
-STEPS = 300000
+STEPS = 250000
 
 # Number of data loading worker threads
 NUM_WORKERS = 4
