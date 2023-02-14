@@ -109,6 +109,7 @@ def datasets(
 
     # Write to json files
     directory = pyfoal.EVAL_DIR / pyfoal.CONFIG
+    directory.mkdir(exist_ok=True, parents=True)
     with open(directory / 'overall.json', 'w') as file:
         json.dump(overall, file, indent=4)
     with open(directory / 'granular.json', 'w') as file:

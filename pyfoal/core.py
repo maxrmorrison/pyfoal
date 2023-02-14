@@ -230,7 +230,10 @@ def from_files_to_files(
 def decode(logits):
     """Get phoneme indices and frame counts from network output"""
     # Normalize
-    observation = torch.nn.functional.log_softmax(logits, dim=0).cpu()
+    observation = torch.nn.functional.log_softmax(logits, dim=0)
+
+    # Viterbi decoding is faster on CPU
+    observation = observation.cpu()
 
     # Always start at the first phoneme
     initial = torch.full(

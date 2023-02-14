@@ -31,10 +31,10 @@ def phonemes():
     if not hasattr(phonemes, pyfoal.ALIGNER):
 
         # Get phoneme set file
-        if pyfoal.ALIGNER == 'p2fa':
-            file = 'p2fa-phonemes.csv'
-        else:
+        if pyfoal.ALIGNER == 'mfa':
             file = 'mfa-phonemes.csv'
+        else:
+            file = 'p2fa-phonemes.csv'
 
         # Load file
         with open(pyfoal.ASSETS_DIR / 'g2p' / file) as file:
