@@ -46,7 +46,7 @@ def index_to_phoneme(index):
 
 def indices_to_phonemes(indices):
     """Convert index sequence to phoneme sequence"""
-    return [index_to_phoneme(index) for index in indices]
+    return [index_to_phoneme(index) for index in indices.tolist()]
 
 
 def indices_to_alignment(indices, hopsize, word_breaks=None):

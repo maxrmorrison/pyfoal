@@ -16,7 +16,7 @@ class Metrics:
 
     def __call__(self):
         if self.l1.count > 0:
-            return self.l1() | self.loss()
+            return {**self.l1(), **self.loss()}
         return self.loss()
 
     def update(
@@ -64,7 +64,7 @@ class L1:
                 phoneme.duration() for phoneme in target.phonemes()])
 
             # Update
-            self.total += torch.abs(predicted_durations - target_durations)
+            self.total += torch.abs(predicted_durations - target_durations).sum()
             self.count += predicted_durations.numel()
 
     def reset(self):
@@ -87,4 +87,3 @@ class Loss:
     def reset(self):
         self.count = 0
         self.total = 0.
-

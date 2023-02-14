@@ -24,6 +24,7 @@ from .config.static import *
 
 from .core import *
 from .interpolate import is_voiced, is_vowel
+from .model import Model
 from . import baselines
 from . import checkpoint
 from . import convert

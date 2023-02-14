@@ -80,7 +80,7 @@ def train(
     # Create models #
     #################
 
-    model = pyfoal.model.Model().to(device)
+    model = pyfoal.Model().to(device)
 
     ####################
     # Create optimizer #

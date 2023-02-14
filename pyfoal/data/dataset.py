@@ -1,5 +1,3 @@
-import os
-
 import numpy as np
 import pypar
 import torch
@@ -40,8 +38,7 @@ class Dataset(torch.utils.data.Dataset):
 
         # Maybe load true alignment
         if dataset.name == 'arctic':
-            alignment = pypar.Alignment(
-                dataset.cache / 'alignment' / f'{stem}.TextGrid')
+            alignment = pypar.Alignment(dataset.cache / f'{stem}.TextGrid')
         else:
             alignment = None
 

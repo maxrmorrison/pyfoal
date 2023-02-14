@@ -63,7 +63,7 @@ def datasets(
             ) = batch
 
             # Montreal forced aligner
-            if pyfoal.METHOD == 'mfa':
+            if pyfoal.ALIGNER == 'mfa':
 
                 # Align
                 alignment = pyfoal.baselines.mfa.from_text_and_audio(
@@ -72,7 +72,7 @@ def datasets(
                 logits = None
 
             # Penn phonetic forced aligner
-            elif pyfoal.METHOD == 'p2fa':
+            elif pyfoal.ALIGNER == 'p2fa':
 
                 # Align
                 alignment = pyfoal.baselines.p2fa.from_text_and_audio(
@@ -81,7 +81,7 @@ def datasets(
                 logits = None
 
             # RAD-TTS neural forced aligner
-            elif pyfoal.METHOD == 'radtts':
+            elif pyfoal.ALIGNER == 'radtts':
 
                 # Infer
                 logits = pyfoal.infer(
@@ -90,14 +90,14 @@ def datasets(
                     checkpoint)
 
                 # Decode
-                alignment = pyfoal.postprocess(logits)
+                alignment = pyfoal.postprocess(phonemes, logits)
 
             else:
 
-                raise ValueError(f'Method {pyfoal.METHOD} is not defined')
+                raise ValueError(f'Aligner {pyfoal.ALIGNER} is not defined')
 
             # Update metrics
-            args = logits, phoneme_lengths, frame_lengths, alignment, target
+            args = logits, phoneme_lengths, frame_lengths, [alignment], target
             file_metrics.update(*args)
             dataset_metrics.update(*args)
             aggregate_metrics.update(*args)

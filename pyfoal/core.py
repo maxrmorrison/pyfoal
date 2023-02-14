@@ -1,5 +1,6 @@
 import contextlib
 import functools
+import math
 import os
 
 import pypar
@@ -58,7 +59,7 @@ def from_text_and_audio(
         logits = infer(phonemes.to(device), audio.to(device), checkpoint)
 
         # Postprocess
-        return postprocess(logits)
+        return postprocess(phonemes, logits)
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -229,27 +230,37 @@ def from_files_to_files(
 def decode(logits):
     """Get phoneme indices and frame counts from network output"""
     # Normalize
-    observation = torch.nn.functional.log_softmax(logits, dim=0)
+    observation = torch.nn.functional.log_softmax(logits, dim=0).cpu()
 
     # Always start at the first phoneme
-    initial = torch.zeros(
-        (logits.shape[1],),
-        dtype=logits.dtype,
-        device=logits.device)
+    initial = torch.full(
+        (observation.shape[1],),
+        -float('inf'),
+        dtype=observation.dtype)
+    initial[0] = 0.
     
     # Enforce monotonicity
-    transition = torch.triu(
-        torch.ones(
-            (logits.shape[1], logits.shape[1]),
-            dtype=logits.dtype,
-            device=logits.device))
-    transition /= transition.sum(dim=1, keepdims=True)
+    transition = torch.full(
+        (observation.shape[1], observation.shape[1]),
+        -float('inf'),
+        dtype=observation.dtype)
+    transition.fill_diagonal_(math.log(.5))
+    transition[
+        torch.arange(len(transition) - 1) + 1,
+        torch.arange(len(transition) - 1)] = math.log(.5)
 
-    # Viterbi decoding
-    indices = torbi.decode(observation, transition, initial)
+    # Viterbi decoding forward pass
+    posterior, memory = torbi.forward(observation, transition, initial)
+
+    # Enforce alignment between final frame and final phoneme
+    posterior[-1] = -float('inf')
+    posterior[-1, -1] = 0.
+
+    # Backward pass
+    indices = torbi.backward(posterior, memory)
 
     # Count consecutive indices
-    return torch.unique_consecutive(indices, return_counts=True)
+    return torch.unique_consecutive(indices, return_counts=True)[1]
 
 
 def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
@@ -268,36 +279,40 @@ def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
         infer.checkpoint = checkpoint
         infer.device = phonemes.device
 
-    # Move model to correct device (no-op if devices are the same)
-    infer.model = infer.model.to(phonemes.device)
+        # Move model to correct device
+        infer.model = infer.model.to(infer.device)
 
     with inference_context(infer.model):
 
         # Get prior distribution
-        prior = pyfoal.data.preprocess.prior(
+        prior = pyfoal.data.preprocess.prior.from_lengths(
             phonemes.shape[-1],
-            pyfoal.convert.samples_to_frames(audio.shape[-1]))
+            pyfoal.convert.samples_to_frames(audio.shape[-1])).to(infer.device)
 
         # Infer
         return infer.model(phonemes, audio, prior)
 
 
-def postprocess(logits):
+def postprocess(phonemes, logits):
     """Postprocess logits to produce alignment"""
-    # Get phoneme indices and frame counts from network output
-    indices, counts = decode(logits)
-    
-    # Convert phoneme indices to phonemes
-    phonemes = pyfoal.convert.indices_to_phonemes(indices)
+    # Get per-phoneme frame counts from network output
+    counts = decode(logits[0])
 
-    # Get times in seconds
-    times = pyfoal.convert.frames_to_seconds(
-        torch.cumsum(torch.cat(torch.zeros(1), counts)))
+    # Convert phoneme indices to phonemes
+    phonemes = pyfoal.convert.indices_to_phonemes(phonemes[0, 0])
+
+    # Get phoneme durations in seconds
+    times = torch.cumsum(
+        torch.cat(
+            (torch.zeros(1, dtype=counts.dtype, device=counts.device),
+            counts)),
+        dim=0)
+    times = pyfoal.convert.frames_to_seconds(times)
 
     # Match phonemes and start/end times
     alignment = [
-        pypar.Word(phoneme, pypar.Phoneme(phoneme, start, end))
-        for phoneme, start, end in zip(phonemes[0], times[:-1], times[1:])]
+        pypar.Word(phoneme, [pypar.Phoneme(phoneme, start, end)])
+        for phoneme, start, end in zip(phonemes, times[:-1], times[1:])]
 
     return pypar.Alignment(alignment)
 
