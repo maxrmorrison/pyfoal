@@ -28,9 +28,6 @@ class Metrics:
         frame_lengths,
         alignments=None,
         targets=None):
-        # Detach from graph
-        logits = logits
-
         # Update loss
         self.loss.update(logits.detach(), phoneme_lengths, frame_lengths)
 
@@ -40,6 +37,7 @@ class Metrics:
             self.l1.update(alignments, targets)
 
     def reset(self):
+        self.accuracy.reset()
         self.l1.reset()
         self.loss.reset()
 

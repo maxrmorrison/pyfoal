@@ -131,6 +131,7 @@ class Aligner:
         durations = [p.duration() for p in alignment.phonemes()]
 
         # Constant offset and rate correction
+        # TODO - verify
         durations[0] += .0125
         durations = [d * 11000. / 11025. for d in durations]
 
