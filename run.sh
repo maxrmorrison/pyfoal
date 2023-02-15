@@ -4,7 +4,7 @@
 # $1 - list of indices of GPUs to use
 
 # Download datasets
-# python -m pyfoal.data.download
+python -m pyfoal.data.download
 
 # Setup experiments
 python -m pyfoal.data.preprocess
