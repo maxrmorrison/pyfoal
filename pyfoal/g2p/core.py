@@ -30,6 +30,16 @@ def from_text(text):
     # Grapheme-to-phoneme conversion
     phonemes = g2p_en.G2p()(text)
 
+    # Remove prominence markings
+    phonemes = [
+        ''.join(c for c in phoneme if not c.isdigit())
+        for phoneme in phonemes]
+    
+    # Handle silences
+    phonemes = [
+        '<silent>' if phoneme == ' ' else phoneme for phoneme in phonemes
+    ]
+
     # Convert to indices
     indices = pyfoal.convert.phonemes_to_indices(phonemes)
 

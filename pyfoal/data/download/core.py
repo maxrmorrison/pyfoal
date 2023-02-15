@@ -86,11 +86,11 @@ def arctic():
     """Download arctic dataset"""
     # Delete data if it already exists
     data_directory = pyfoal.DATA_DIR / 'arctic'
-    # if data_directory.exists():
-    #     shutil.rmtree(str(data_directory))
+    if data_directory.exists():
+        shutil.rmtree(str(data_directory))
 
     # Create data directory
-    # data_directory.mkdir(parents=True)
+    data_directory.mkdir(parents=True)
 
     # URL format string
     url = (
@@ -102,12 +102,12 @@ def arctic():
         ARCTIC_SPEAKERS,
         'Downloading arctic',
         total=len(ARCTIC_SPEAKERS))
-    # for speaker in iterator:
-    #     download_tar_bz2(url.format(speaker), data_directory)
+    for speaker in iterator:
+        download_tar_bz2(url.format(speaker), data_directory)
 
     # Download text data
     text_file = data_directory / 'sentences.txt'
-    # download_file('http://festvox.org/cmu_arctic/cmuarctic.data', text_file)
+    download_file('http://festvox.org/cmu_arctic/cmuarctic.data', text_file)
 
     # Setup data directory
     cache_directory = pyfoal.CACHE_DIR / 'arctic'
@@ -180,14 +180,18 @@ def arctic():
 
             # Handle silence tokens
             phonemes = [
-                '<silent>' if phoneme in ['pau'] else phoneme.upper()
+                '<silent>' if phoneme in ['pau', 'ssil'] else phoneme.upper()
                 for phoneme in phonemes]
 
-            # TEMPORARY
-            for phoneme in phonemes:
-                if phoneme.upper() not in pyfoal.load.phonemes():
-                    print(f'Out of domain phoneme {phoneme}')
-            import pdb; pdb.set_trace()
+            # Handle breaths
+            phonemes = [
+                '<nonspeech>' if phoneme == 'H#' else phoneme
+                for phoneme in phonemes]
+
+            # Convert AX phoneme to be in-domain of grapheme-to-phoneme system
+            phonemes = [
+                'AH' if phoneme == 'AX' else phoneme for phoneme in phonemes]
+
             # Handle out-of-domain tokens
             phonemes = [
                 phoneme if phoneme in pyfoal.load.phonemes() else '<unk>'
@@ -282,14 +286,13 @@ def libritts():
                 speaker_count[speaker] = [len(speaker_count), 0]
             index, count = speaker_count[speaker]
 
-            # Load audio
-            audio, sample_rate = torchaudio.load(audio_file)
+            # Load audio at system sample rate
+            audio = pyfoal.load.audio(audio_file)
 
-            # Save at system sample rate
+            # Save
             stem = f'{index:04d}/{count:06d}'
             output_file = Path(f'{stem}.wav')
             output_file.parent.mkdir(exist_ok=True, parents=True)
-            audio = pyfoal.resample(audio, sample_rate)
             torchaudio.save(
                 output_file.parent / f'{output_file.stem}.wav',
                 audio,
