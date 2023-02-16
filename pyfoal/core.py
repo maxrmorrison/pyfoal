@@ -1,6 +1,5 @@
 import contextlib
 import functools
-import math
 import os
 
 import pypar
@@ -59,7 +58,7 @@ def from_text_and_audio(
         logits = infer(phonemes.to(device), audio.to(device), checkpoint)
 
         # Postprocess
-        return postprocess(audio[0], phonemes[0], logits[0])
+        return postprocess(phonemes[0], logits[0])
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -271,7 +270,7 @@ def decode(phonemes, logits):
     indices = torbi.backward(posterior, memory)
 
     # Count consecutive indices
-    return torch.unique_consecutive(indices, return_counts=True)[1]
+    return torch.unique_consecutive(indices, return_counts=True)
 
 
 def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
@@ -304,13 +303,13 @@ def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
         return infer.model(phonemes, audio, prior)
 
 
-def postprocess(audio, phonemes, logits):
+def postprocess(phonemes, logits):
     """Postprocess logits to produce alignment"""
     # Get per-phoneme frame counts from network output
-    counts = decode(logits)
+    indices, counts = decode(logits)
 
     # Convert phoneme indices to phonemes
-    phonemes = pyfoal.convert.indices_to_phonemes(phonemes[0])
+    phonemes = pyfoal.convert.indices_to_phonemes(phonemes[0, indices])
 
     # Get phoneme durations in seconds
     times = torch.cumsum(

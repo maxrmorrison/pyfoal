@@ -270,7 +270,6 @@ def evaluate(directory, step, model, gpu, condition, loader):
                 # TODO - preserve exact sample length
                 alignments = [
                     pyfoal.postprocess(
-                        audio[:, :pyfoal.convert.frames_to_samples(frame_length)],
                         phoneme[:, :phoneme_length],
                         logit[:frame_length, :phoneme_length])
                     for phoneme, logit, phoneme_length, frame_length in
