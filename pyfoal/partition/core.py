@@ -44,8 +44,17 @@ def arctic():
     # Extract speaker and filename as stem
     stems = sorted([f'{file.parent.name}/{file.stem}' for file in files])
 
-    # Arctic is evaluation only due to low speaker count
-    return {'train': [], 'valid': [], 'test': stems}
+    # Shuffle
+    random.shuffle(stems)
+
+    # Get split point
+    split = int(.9 * len(stems))
+
+    # Partition
+    return {
+        'train': [],
+        'valid': sorted(stems[split:]),
+        'test': sorted(stems[:split])}
 
 
 def libritts():

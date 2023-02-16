@@ -14,6 +14,9 @@ import pyfoal
 
 def from_text(text):
     """Convert text to cmu"""
+    # Add silence token to start and end
+    text = f' {text} '
+    
     # Remove newlines, tabs, and extra whitespace
     text = text.replace('\n', ' ')
     text = text.replace('\t', ' ')
@@ -37,8 +40,7 @@ def from_text(text):
     
     # Handle silences
     phonemes = [
-        '<silent>' if phoneme == ' ' else phoneme for phoneme in phonemes
-    ]
+        '<silent>' if phoneme == ' ' else phoneme for phoneme in phonemes]
 
     # Convert to indices
     indices = pyfoal.convert.phonemes_to_indices(phonemes)

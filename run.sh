@@ -1,7 +1,7 @@
 # Runs all experiments and evaluations
 
 # Args
-# $1 - list of indices of GPUs to use
+# $1 - index of GPU to use
 
 # Download datasets
 python -m pyfoal.data.download

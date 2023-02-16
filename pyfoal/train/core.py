@@ -75,6 +75,7 @@ def train(
     torch.manual_seed(pyfoal.RANDOM_SEED)
     train_loader = pyfoal.data.loader(datasets, 'train', gpu)
     valid_loader = pyfoal.data.loader(datasets, 'valid', gpu)
+    test_loader = pyfoal.data.loader(pyfoal.EVALUATION_DATASETS, 'valid', gpu)
 
     #################
     # Create models #
@@ -189,6 +190,7 @@ def train(
                         gpu)
                     evaluate_fn('train', train_loader)
                     evaluate_fn('valid', valid_loader)
+                    evaluate_fn('test', test_loader)
 
                 ###################
                 # Save checkpoint #
@@ -251,7 +253,8 @@ def evaluate(directory, step, model, gpu, condition, loader):
                 phoneme_lengths,
                 frame_lengths,
                 stems,
-                *_
+                targets,
+                text
             ) = batch
 
             # Forward pass
@@ -261,15 +264,29 @@ def evaluate(directory, step, model, gpu, condition, loader):
                 priors.to(device),
                 mask.to(device))
 
+            if condition == 'test':
+
+                # Decode
+                # TODO - preserve exact sample length
+                alignments = [
+                    pyfoal.postprocess(
+                        audio[:, :pyfoal.convert.frames_to_samples(frame_length)],
+                        phoneme[:, :phoneme_length],
+                        logit[:frame_length, :phoneme_length])
+                    for phoneme, logit, phoneme_length, frame_length in
+                    zip(phonemes, logits, phoneme_lengths, frame_lengths)]
+            
+            else:
+
+                alignments, targets = None, None
+
             # Update metrics
             metrics.update(
                 logits,
                 phoneme_lengths.to(device),
-                frame_lengths.to(device))
-
-            # Stop when we exceed some number of batches
-            if i + 1 == pyfoal.LOG_STEPS:
-                break
+                frame_lengths.to(device),
+                alignments,
+                targets)
 
             # Add audio and alignment plot
             if i == 0 and condition == 'valid':
@@ -292,6 +309,10 @@ def evaluate(directory, step, model, gpu, condition, loader):
                     logit[logit < -60.] = -60.
                     figures[f'attention/{stem}'] = \
                         pyfoal.plot.logits(logit.cpu())
+
+            # Stop when we exceed some number of batches
+            if i + 1 == pyfoal.LOG_STEPS:
+                break
 
     # Format results
     scalars = {

@@ -16,9 +16,11 @@ class Metrics:
         self.loss = Loss()
 
     def __call__(self):
-        results = {**self.accuracy(), **self.loss()}
+        results = self.loss()
+        if self.accuracy.count > 0:
+            results = {**results, **self.accuracy()}
         if self.l1.count > 0:
-            return {**results, **self.l1()}
+            results = {**results, **self.l1()}
         return results
 
     def update(
@@ -29,7 +31,7 @@ class Metrics:
         alignments=None,
         targets=None):
         # Update loss
-        self.loss.update(logits.detach(), phoneme_lengths, frame_lengths)
+        self.loss.update(logits, phoneme_lengths, frame_lengths)
 
         # Update phoneme duration accuracy and error
         if alignments is not None and targets is not None:
@@ -69,13 +71,13 @@ class Accuracy:
         
             # Update
             for level in self.levels:
-                self.total[level] += sum(
+                self.totals[level] += sum(
                     torch.abs(predicted_durations - target_durations) < level)
                 self.count += predicted_durations.numel()
 
     def reset(self):
         self.count = 0
-        self.total = {level: 0. for level in self.levels}
+        self.totals = {level: 0. for level in self.levels}
 
 
 class L1:

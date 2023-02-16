@@ -90,7 +90,7 @@ def datasets(
                     checkpoint)
 
                 # Decode
-                alignment = pyfoal.postprocess(phonemes, logits)
+                alignment = pyfoal.postprocess(audio[0], phonemes[0], logits[0])
 
             else:
 

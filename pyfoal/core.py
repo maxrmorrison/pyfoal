@@ -59,7 +59,7 @@ def from_text_and_audio(
         logits = infer(phonemes.to(device), audio.to(device), checkpoint)
 
         # Postprocess
-        return postprocess(phonemes, logits)
+        return postprocess(audio[0], phonemes[0], logits[0])
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -227,7 +227,7 @@ def from_files_to_files(
 ###############################################################################
 
 
-def decode(logits):
+def decode(phonemes, logits):
     """Get phoneme indices and frame counts from network output"""
     # Normalize
     observation = torch.nn.functional.log_softmax(logits, dim=0)
@@ -243,14 +243,22 @@ def decode(logits):
     initial[0] = 0.
     
     # Enforce monotonicity
-    transition = torch.full(
+    transition = torch.zeros(
         (observation.shape[1], observation.shape[1]),
-        -float('inf'),
         dtype=observation.dtype)
-    transition.fill_diagonal_(math.log(.5))
+    transition.fill_diagonal_(1.)
     transition[
         torch.arange(len(transition) - 1) + 1,
-        torch.arange(len(transition) - 1)] = math.log(.5)
+        torch.arange(len(transition) - 1)] = 1.
+    
+    # Allow spaces to optionally be skipped
+    spaces = torch.where(
+        phonemes[:-2] == pyfoal.convert.phoneme_to_index('<silent>'))
+    transition[spaces + 2, spaces] = 1.
+
+    # Normalize
+    transition /= transition.sum(dim=1, keepdim=True)
+    transition = torch.log(transition)
 
     # Viterbi decoding forward pass
     posterior, memory = torbi.forward(observation, transition, initial)
@@ -296,13 +304,13 @@ def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
         return infer.model(phonemes, audio, prior)
 
 
-def postprocess(phonemes, logits):
+def postprocess(audio, phonemes, logits):
     """Postprocess logits to produce alignment"""
     # Get per-phoneme frame counts from network output
-    counts = decode(logits[0])
+    counts = decode(logits)
 
     # Convert phoneme indices to phonemes
-    phonemes = pyfoal.convert.indices_to_phonemes(phonemes[0, 0])
+    phonemes = pyfoal.convert.indices_to_phonemes(phonemes[0])
 
     # Get phoneme durations in seconds
     times = torch.cumsum(

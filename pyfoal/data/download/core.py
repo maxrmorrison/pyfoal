@@ -86,11 +86,11 @@ def arctic():
     """Download arctic dataset"""
     # Delete data if it already exists
     data_directory = pyfoal.DATA_DIR / 'arctic'
-    if data_directory.exists():
-        shutil.rmtree(str(data_directory))
+    # if data_directory.exists():
+    #     shutil.rmtree(str(data_directory))
 
     # Create data directory
-    data_directory.mkdir(parents=True)
+    # data_directory.mkdir(parents=True)
 
     # URL format string
     url = (
@@ -102,12 +102,12 @@ def arctic():
         ARCTIC_SPEAKERS,
         'Downloading arctic',
         total=len(ARCTIC_SPEAKERS))
-    for speaker in iterator:
-        download_tar_bz2(url.format(speaker), data_directory)
+    # for speaker in iterator:
+    #     download_tar_bz2(url.format(speaker), data_directory)
 
     # Download text data
     text_file = data_directory / 'sentences.txt'
-    download_file('http://festvox.org/cmu_arctic/cmuarctic.data', text_file)
+    # download_file('http://festvox.org/cmu_arctic/cmuarctic.data', text_file)
 
     # Setup data directory
     cache_directory = pyfoal.CACHE_DIR / 'arctic'
@@ -185,7 +185,7 @@ def arctic():
 
             # Handle breaths
             phonemes = [
-                '<nonspeech>' if phoneme == 'H#' else phoneme
+                'HH' if phoneme == 'H#' else phoneme
                 for phoneme in phonemes]
 
             # Convert AX phoneme to be in-domain of grapheme-to-phoneme system
@@ -246,18 +246,18 @@ def libritts():
         # Download
         url = f'https://us.openslr.org/resources/60/{partition}.tar.gz'
         file = source_directory / f'libritts-{partition}.tar.gz'
-        download_file(url, file)
+        # download_file(url, file)
 
         # Unpack
-        with tarfile.open(file, 'r:gz') as tfile:
-            tfile.extractall(pyfoal.DATA_DIR)
+        # with tarfile.open(file, 'r:gz') as tfile:
+        #     tfile.extractall(pyfoal.DATA_DIR)
 
     # Uncapitalize directory name
-    shutil.rmtree(str(data_directory), ignore_errors=True)
-    shutil.move(
-        str(pyfoal.DATA_DIR / 'LibriTTS'),
-        str(data_directory),
-        copy_function=shutil.copytree)
+    # shutil.rmtree(str(data_directory), ignore_errors=True)
+    # shutil.move(
+    #     str(pyfoal.DATA_DIR / 'LibriTTS'),
+    #     str(data_directory),
+    #     copy_function=shutil.copytree)
 
     # File locations
     audio_files = sorted(data_directory.rglob('*.wav'))
