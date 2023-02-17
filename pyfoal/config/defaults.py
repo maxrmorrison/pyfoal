@@ -109,7 +109,7 @@ CHECKPOINT_INTERVAL = 25000  # steps
 STEPS = 250000
 
 # Number of data loading worker threads
-NUM_WORKERS = 16
+NUM_WORKERS = 128
 
 # Seed for all random number generators
 RANDOM_SEED = 1234

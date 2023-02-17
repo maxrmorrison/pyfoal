@@ -251,9 +251,9 @@ def decode(phonemes, logits):
         torch.arange(len(transition) - 1)] = 1.
     
     # Allow spaces to optionally be skipped
-    spaces = torch.where(
-        phonemes[:-2] == pyfoal.convert.phoneme_to_index('<silent>'))
-    transition[spaces + 2, spaces] = 1.
+    spaces = 1 + torch.where(
+        phonemes[1:-1] == pyfoal.convert.phoneme_to_index('<silent>'))[1]
+    transition[spaces + 1, spaces - 1] = 1.
 
     # Normalize
     transition /= transition.sum(dim=1, keepdim=True)
@@ -306,7 +306,7 @@ def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
 def postprocess(phonemes, logits):
     """Postprocess logits to produce alignment"""
     # Get per-phoneme frame counts from network output
-    indices, counts = decode(logits)
+    indices, counts = decode(phonemes, logits)
 
     # Convert phoneme indices to phonemes
     phonemes = pyfoal.convert.indices_to_phonemes(phonemes[0, indices])
