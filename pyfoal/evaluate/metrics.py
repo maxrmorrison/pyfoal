@@ -66,10 +66,10 @@ class Accuracy:
             # Extract phoneme durations
             predicted_durations = torch.tensor([
                 phoneme.duration() for phoneme in alignment.phonemes()
-                if phoneme != '<silent>'])
+                if str(phoneme) != '<silent>'])
             target_durations = torch.tensor([
                 phoneme.duration() for phoneme in target.phonemes()
-                if phoneme != '<silent>'])
+                if str(phoneme) != '<silent>'])
         
             # Update
             for level in self.levels:
@@ -96,10 +96,10 @@ class L1:
             # Extract phoneme durations
             predicted_durations = torch.tensor([
                 phoneme.duration() for phoneme in alignment.phonemes()
-                if phoneme != '<silent>'])
+                if str(phoneme) != '<silent>'])
             target_durations = torch.tensor([
                 phoneme.duration() for phoneme in target.phonemes()
-                if phoneme != '<silent>'])
+                if str(phoneme) != '<silent>'])
 
             # Update
             self.total += torch.abs(predicted_durations - target_durations).sum()

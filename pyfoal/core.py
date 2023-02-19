@@ -309,7 +309,8 @@ def postprocess(phonemes, logits):
     indices, counts = decode(phonemes, logits)
 
     # Convert phoneme indices to phonemes
-    phonemes = pyfoal.convert.indices_to_phonemes(phonemes[0, indices])
+    phonemes = pyfoal.convert.indices_to_phonemes(
+        phonemes[0, indices.to(torch.long)])
 
     # Get phoneme durations in seconds
     times = torch.cumsum(

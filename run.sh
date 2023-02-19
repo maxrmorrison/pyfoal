@@ -4,11 +4,11 @@
 # $1 - index of GPU to use
 
 # Download datasets
-# python -m pyfoal.data.download
+python -m pyfoal.data.download --datasets arctic
 
 # Setup experiments
-python -m pyfoal.data.preprocess
-python -m pyfoal.partition
+python -m pyfoal.data.preprocess --datasets arctic
+python -m pyfoal.partition --datasets arctic
 
 # Train
 python -m pyfoal.train --config config/radtts.py --gpus $1

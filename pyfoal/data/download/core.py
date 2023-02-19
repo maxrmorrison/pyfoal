@@ -39,7 +39,6 @@
 ###############################################################################
 
 
-import re
 import requests
 import shutil
 import tarfile
@@ -105,24 +104,9 @@ def arctic():
     # for speaker in iterator:
     #     download_tar_bz2(url.format(speaker), data_directory)
 
-    # Download text data
-    text_file = data_directory / 'sentences.txt'
-    # download_file('http://festvox.org/cmu_arctic/cmuarctic.data', text_file)
-
     # Setup data directory
     cache_directory = pyfoal.CACHE_DIR / 'arctic'
     cache_directory.mkdir(parents=True, exist_ok=True)
-
-    # Load text
-    with open(text_file) as file:
-        content = file.read()
-
-    # Write csv with text
-    sentences = {
-        match[0]: match[1] for match in re.findall(
-            r'\( (arctic_[ab][0-9][0-9][0-9][0-9]) \"(.+)\" \)',
-            content,
-            re.MULTILINE)}
 
     # Iterate over speakers and copy
     for index, speaker in enumerate(ARCTIC_SPEAKERS):
@@ -140,23 +124,31 @@ def arctic():
         alignment_files = [
             input_directory / 'lab' / f'{file.stem}.lab'
             for file in audio_files]
+        
+        # Load text
+        text_file = input_directory / 'etc' / 'txt.done.data'
+        with open(text_file) as file:
+            lines = [line.strip()[2:-2] for line in file.readlines()]
+            text = {line[:12]: line[14:-1] for line in lines}
 
         # Save to cache
         i = 0
-        for alignment_file, audio_file in zip(alignment_files, audio_files):
+        iterator = pyfoal.iterator(
+            zip(alignment_files, audio_files),
+            'Formatting arctic',
+            total=len(alignment_files))
+        for alignment_file, audio_file in iterator:
             assert alignment_file.stem == audio_file.stem
 
+            # Skip files without text
             try:
-
-                # Save text
-                sentence = sentences[audio_file.stem]
-                with open(output_directory / f'{i:06d}.txt', 'w') as file:
-                    file.write(sentence)
-
-            except KeyError:
-
-                # Skip examples with no available text
+                sentence = text[audio_file.stem]
+            except Exception as error:
                 continue
+
+            # Save text
+            with open(output_directory / f'{i:06d}.txt', 'w') as file:
+                file.write(sentence)
 
             # Resample audio
             audio = pyfoal.load.audio(audio_file)
@@ -200,15 +192,6 @@ def arctic():
             # Correct end time
             endtimes = [float(endtime) for endtime in endtimes]
             endtimes[-1] = pyfoal.convert.samples_to_seconds(audio.shape[-1])
-
-            # Handle duplicates
-            j = 0
-            while j < len(phonemes) - 1:
-                if phonemes[j] == phonemes[j + 1]:
-                    endtimes[j] = endtimes[j + 1]
-                    del phonemes[j]
-                else:
-                    j += 1
 
             # We don't have word alignments, so we just treat each
             # phoneme as a word
@@ -273,7 +256,7 @@ def libritts():
         # Iterate over files
         iterator = pyfoal.iterator(
             zip(audio_files, text_files),
-            'Downloading libritts',
+            'Formatting libritts',
             total=len(audio_files))
         for audio_file, text_file in iterator:
 

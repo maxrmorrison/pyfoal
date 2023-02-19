@@ -1,4 +1,5 @@
 import multiprocessing
+import os
 import string
 
 import g2p_en
@@ -63,5 +64,5 @@ def from_file_to_file(text_file, output_file):
 
 def from_files_to_files(text_files, output_files):
     """Convert text on disk to phonemes and save"""
-    with multiprocessing.Pool(pyfoal.NUM_WORKERS) as pool:
+    with multiprocessing.Pool(os.cpu_count() // 2) as pool:
         pool.starmap(from_file_to_file, zip(text_files, output_files))
