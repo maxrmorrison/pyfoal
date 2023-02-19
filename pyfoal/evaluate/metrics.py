@@ -71,11 +71,12 @@ class Accuracy:
                 phoneme.duration() for phoneme in target.phonemes()
                 if str(phoneme) != '<silent>'])
         
-            # Update
-            for level in self.levels:
-                self.totals[level] += sum(
-                    torch.abs(predicted_durations - target_durations) < level)
-                self.count += predicted_durations.numel()
+            # Maybe update
+            if len(predicted_durations) == len(target_durations):
+                for level in self.levels:
+                    self.totals[level] += sum(
+                        torch.abs(predicted_durations - target_durations) < level)
+                    self.count += predicted_durations.numel()
 
     def reset(self):
         self.count = 0
@@ -101,9 +102,11 @@ class L1:
                 phoneme.duration() for phoneme in target.phonemes()
                 if str(phoneme) != '<silent>'])
 
-            # Update
-            self.total += torch.abs(predicted_durations - target_durations).sum()
-            self.count += predicted_durations.numel()
+            # Maybe update
+            if len(predicted_durations) == len(target_durations):
+                self.total += torch.abs(
+                    predicted_durations - target_durations).sum()
+                self.count += predicted_durations.numel()
 
     def reset(self):
         self.count = 0

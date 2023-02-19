@@ -100,7 +100,7 @@ PLOT_EXAMPLES = 8
 
 
 # Batch size (per gpu)
-BATCH_SIZE = 24
+BATCH_SIZE = 16
 
 # Number of steps between saving checkpoints
 CHECKPOINT_INTERVAL = 25000  # steps

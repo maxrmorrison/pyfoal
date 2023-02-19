@@ -36,6 +36,7 @@ def sampler(dataset, partition):
 ###############################################################################
 
 
+# TODO - variable batch size with even total sequence length
 class DistributedSampler:
 
     def __init__(self, dataset):
@@ -82,6 +83,7 @@ class DistributedSampler:
         self.epoch = epoch
 
 
+# TODO - variable batch size with even total sequence length
 class Sampler:
 
     def __init__(self, dataset):

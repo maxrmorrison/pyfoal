@@ -254,7 +254,7 @@ def evaluate(directory, step, model, gpu, condition, loader):
                 frame_lengths,
                 stems,
                 targets,
-                text
+                _
             ) = batch
 
             # Forward pass
@@ -262,7 +262,7 @@ def evaluate(directory, step, model, gpu, condition, loader):
                 phonemes.to(device),
                 audios.to(device),
                 priors.to(device),
-                mask.to(device))
+                mask.to(device)).detach()
 
             if condition == 'test':
 
@@ -274,19 +274,6 @@ def evaluate(directory, step, model, gpu, condition, loader):
                         logit[:frame_length, :phoneme_length])
                     for phoneme, logit, phoneme_length, frame_length in
                     zip(phonemes, logits, phoneme_lengths, frame_lengths)]
-                
-                for alignment, target, stem in zip(alignments, targets, stems):
-                    
-                    # Extract phoneme durations
-                    predicted_durations = torch.tensor([
-                        phoneme.duration() for phoneme in alignment.phonemes()
-                        if str(phoneme) != '<silent>'])
-                    target_durations = torch.tensor([
-                        phoneme.duration() for phoneme in target.phonemes()
-                        if str(phoneme) != '<silent>'])
-                    
-                    if len(predicted_durations) != len(target_durations):
-                        print(stem)
             
             else:
 
