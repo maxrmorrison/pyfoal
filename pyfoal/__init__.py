@@ -37,4 +37,5 @@ from . import model
 from . import partition
 from . import plot
 from . import train
+from . import viterbi
 from . import write

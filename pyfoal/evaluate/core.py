@@ -41,7 +41,7 @@ def datasets(
         # Setup test dataset
         iterator = pyfoal.iterator(
             pyfoal.data.loader([dataset], 'test'),
-            f'Evaluating {pyfoal.CONFIG} pitch quality on {dataset}')
+            f'Evaluating {pyfoal.CONFIG} on {dataset}')
 
         # Iterate over test set
         for batch in iterator:

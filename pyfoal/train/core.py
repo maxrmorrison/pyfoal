@@ -131,7 +131,7 @@ def train(
     while step < pyfoal.STEPS:
 
         # Seed sampler
-        train_loader.sampler.set_epoch(
+        train_loader.batch_sampler.set_epoch(
             (step + len(train_loader.dataset) - 1) //
             len(train_loader.dataset))
 
@@ -275,6 +275,36 @@ def evaluate(directory, step, model, gpu, condition, loader):
                     for phoneme, logit, phoneme_length, frame_length in
                     zip(phonemes, logits, phoneme_lengths, frame_lengths)]
             
+                # Add audio and alignment plot
+                if i == 0:
+                    iterator = zip(
+                        audios[:pyfoal.PLOT_EXAMPLES],
+                        logits[:pyfoal.PLOT_EXAMPLES],
+                        stems[:pyfoal.PLOT_EXAMPLES],
+                        frame_lengths[:pyfoal.PLOT_EXAMPLES],
+                        phoneme_lengths[:pyfoal.PLOT_EXAMPLES],
+                        alignments[:pyfoal.PLOT_EXAMPLES])
+                    for (
+                        audio,
+                        logit,
+                        stem,
+                        frame_length,
+                        phoneme_length,
+                        alignment
+                    ) in iterator:
+
+                        # Add audio
+                        samples = pyfoal.convert.frames_to_samples(frame_length)
+                        waveforms[f'audio/{stem}'] = audio[:, :samples]
+
+                        # Add alignment figure
+                        logit = torch.nn.functional.log_softmax(
+                            logit[:frame_length, :phoneme_length],
+                            dim=1)
+                        logit[logit < -60.] = -60.
+                        figures[f'attention/{stem}'] = \
+                            pyfoal.plot.logits(logit.cpu(), alignment)
+
             else:
 
                 alignments, targets = None, None
@@ -286,28 +316,6 @@ def evaluate(directory, step, model, gpu, condition, loader):
                 frame_lengths.to(device),
                 alignments,
                 targets)
-
-            # Add audio and alignment plot
-            if i == 0 and condition == 'valid':
-                iterator = zip(
-                    audios[:pyfoal.PLOT_EXAMPLES],
-                    logits[:pyfoal.PLOT_EXAMPLES],
-                    stems[:pyfoal.PLOT_EXAMPLES],
-                    frame_lengths[:pyfoal.PLOT_EXAMPLES],
-                    phoneme_lengths[:pyfoal.PLOT_EXAMPLES])
-                for audio, logit, stem, frame_length, phoneme_length in iterator:
-
-                    # Add audio
-                    samples = pyfoal.convert.frames_to_samples(frame_length)
-                    waveforms[f'audio/{stem}'] = audio[:, :samples]
-
-                    # Add alignment figure
-                    logit = torch.nn.functional.log_softmax(
-                        logit[:frame_length, :phoneme_length],
-                        dim=1)
-                    logit[logit < -60.] = -60.
-                    figures[f'attention/{stem}'] = \
-                        pyfoal.plot.logits(logit.cpu())
 
             # Stop when we exceed some number of batches
             if i + 1 == pyfoal.LOG_STEPS:

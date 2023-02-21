@@ -200,7 +200,7 @@ def arctic():
             for end, phoneme in zip(endtimes, phonemes):
                 alignment.append(
                     pypar.Word(phoneme, [pypar.Phoneme(phoneme, start, end)]))
-                end = start
+                start = end
 
             # Write alignment
             pypar.Alignment(alignment).save(

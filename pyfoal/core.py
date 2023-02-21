@@ -3,7 +3,6 @@ import functools
 import os
 
 import pypar
-import torbi
 import torch
 import torchaudio
 import tqdm
@@ -45,7 +44,7 @@ def from_text_and_audio(
     if aligner == 'p2fa':
         return pyfoal.baselines.p2fa.align(text, audio, sample_rate)
 
-    # RAD-TTS neural alignment
+    # RADTTS neural alignment
     if aligner == 'radtts':
 
         # Get inference device
@@ -226,53 +225,6 @@ def from_files_to_files(
 ###############################################################################
 
 
-def decode(phonemes, logits):
-    """Get phoneme indices and frame counts from network output"""
-    # Normalize
-    observation = torch.nn.functional.log_softmax(logits, dim=0)
-
-    # Viterbi decoding is faster on CPU
-    observation = observation.cpu()
-
-    # Always start at the first phoneme
-    initial = torch.full(
-        (observation.shape[1],),
-        -float('inf'),
-        dtype=observation.dtype)
-    initial[0] = 0.
-    
-    # Enforce monotonicity
-    transition = torch.zeros(
-        (observation.shape[1], observation.shape[1]),
-        dtype=observation.dtype)
-    transition.fill_diagonal_(1.)
-    transition[
-        torch.arange(len(transition) - 1) + 1,
-        torch.arange(len(transition) - 1)] = 1.
-    
-    # Allow spaces to optionally be skipped
-    spaces = 1 + torch.where(
-        phonemes[1:-1] == pyfoal.convert.phoneme_to_index('<silent>'))[1]
-    transition[spaces + 1, spaces - 1] = 1.
-
-    # Normalize
-    transition /= transition.sum(dim=1, keepdim=True)
-    transition = torch.log(transition)
-
-    # Viterbi decoding forward pass
-    posterior, memory = torbi.forward(observation, transition, initial)
-
-    # Enforce alignment between final frame and final phoneme
-    posterior[-1] = -float('inf')
-    posterior[-1, -1] = 0.
-
-    # Backward pass
-    indices = torbi.backward(posterior, memory)
-
-    # Count consecutive indices
-    return torch.unique_consecutive(indices, return_counts=True)
-
-
 def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
     """Perform forward pass to retrieve attention alignment"""
     # Maybe cache model
@@ -306,7 +258,7 @@ def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
 def postprocess(phonemes, logits):
     """Postprocess logits to produce alignment"""
     # Get per-phoneme frame counts from network output
-    indices, counts = decode(phonemes, logits)
+    indices, counts = pyfoal.viterbi.decode(phonemes, logits)
 
     # Convert phoneme indices to phonemes
     phonemes = pyfoal.convert.indices_to_phonemes(

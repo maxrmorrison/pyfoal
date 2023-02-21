@@ -54,8 +54,6 @@ class Dataset(torch.utils.data.Dataset):
     def buckets(self):
         """Partition indices into buckets based on length for sampling"""
         # Get the size of a bucket
-        # TODO - should we instead try to make the total length of each bucket
-        #        the same and the batch size variable?
         size = len(self) // pyfoal.BUCKETS
 
         # Get indices in order of length
@@ -66,7 +64,12 @@ class Dataset(torch.utils.data.Dataset):
         indices = np.argsort(lengths)
 
         # Split into buckets based on length
-        return [indices[i:i + size] for i in range(0, len(self), size)]
+        buckets = [indices[i:i + size] for i in range(0, len(self), size)]
+
+        # Add max length of each bucket
+        buckets = [(lengths[bucket[-1]], bucket) for bucket in buckets]
+
+        return buckets
 
     def get_dataset(self, index):
         """Retrieve the dataset to index and index into the datset"""

@@ -85,7 +85,7 @@ SOURCES_DIR = ROOT_DIR / 'data' / 'sources'
 ALIGNER = 'radtts'
 
 # Number of steps between tensorboard logging
-LOG_INTERVAL = 2500  # steps
+LOG_INTERVAL = 5000  # steps
 
 # Number of steps to perform for tensorboard logging
 LOG_STEPS = 16
@@ -99,8 +99,8 @@ PLOT_EXAMPLES = 8
 ###############################################################################
 
 
-# Batch size (per gpu)
-BATCH_SIZE = 16
+# Maximum number of frames in a batch (per GPU)
+MAX_FRAMES = 65000
 
 # Number of steps between saving checkpoints
 CHECKPOINT_INTERVAL = 25000  # steps

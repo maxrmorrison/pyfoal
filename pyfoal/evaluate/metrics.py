@@ -62,6 +62,9 @@ class Accuracy:
 
     def update(self, alignments, targets):
         for alignment, target in zip(alignments, targets):
+
+            if alignment is None or target is None:
+                continue
             
             # Extract phoneme durations
             predicted_durations = torch.tensor([
@@ -94,6 +97,9 @@ class L1:
     def update(self, alignments, targets):
         for alignment, target in zip(alignments, targets):
 
+            if alignment is None or target is None:
+                continue
+            
             # Extract phoneme durations
             predicted_durations = torch.tensor([
                 phoneme.duration() for phoneme in alignment.phonemes()

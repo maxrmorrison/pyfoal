@@ -25,7 +25,10 @@ def sampler(dataset, partition):
 
     # Sample test data sequentially
     elif partition == 'test':
-        return torch.utils.data.SequentialSampler(dataset)
+        return torch.utils.data.BatchSampler(
+            torch.utils.data.SequentialSampler(dataset),
+            1,
+            False)
 
     else:
         raise ValueError(f'Partition {partition} is not defined')
@@ -36,54 +39,6 @@ def sampler(dataset, partition):
 ###############################################################################
 
 
-# TODO - variable batch size with even total sequence length
-class DistributedSampler:
-
-    def __init__(self, dataset):
-        super().__init__()
-        self.epoch = 0
-        self.rank = torch.distributed.get_rank()
-        self.num_replicas = torch.distributed.get_world_size()
-        self.length = math.ceil(len(dataset) / self.num_replicas)
-        self.total_size = self.length * self.num_replicas
-        self.buckets = dataset.buckets()
-
-    def __iter__(self):
-        # Deterministic shuffling based on epoch
-        generator = torch.Generator()
-        generator.manual_seed(pyfoal.RANDOM_SEED + self.epoch)
-
-        # Shuffle buckets
-        buckets = [
-            self.buckets[i] for i in
-            torch.randperm(len(self.buckets), generator=generator).tolist()]
-
-        # Get shuffled indices from shuffled buckets
-        indices = []
-        for bucket in buckets:
-            indices.extend([
-                bucket[i] for i in
-                torch.randperm(len(bucket), generator=generator).tolist()])
-
-        # Add extra samples to make it evenly divisible
-        padding = self.total_size - len(indices)
-        if padding <= len(indices):
-            indices += indices[:padding]
-        else:
-            indices += (
-                indices * math.ceil(padding / len(indices)))[:padding]
-
-        # Subsample
-        return iter(indices[self.rank:self.total_size:self.num_replicas])
-
-    def __len__(self):
-        return self.length
-
-    def set_epoch(self, epoch):
-        self.epoch = epoch
-
-
-# TODO - variable batch size with even total sequence length
 class Sampler:
 
     def __init__(self, dataset):
@@ -92,28 +47,50 @@ class Sampler:
         self.buckets = dataset.buckets()
 
     def __iter__(self):
-        # Deterministic shuffling based on epoch
-        generator = torch.Generator()
-        generator.manual_seed(pyfoal.RANDOM_SEED + self.epoch)
-
-        # Shuffle buckets
-        buckets = [
-            self.buckets[i] for i in
-            torch.randperm(len(self.buckets), generator=generator).tolist()]
-
-        # Get shuffled indices from shuffled buckets
-        indices = []
-        for bucket in buckets:
-            indices.extend([
-                bucket[i] for i in
-                torch.randperm(len(bucket), generator=generator).tolist()])
-
-        # Iterate over shuffled indices
-        for index in indices:
-            yield index
+        return iter(self.batch())
 
     def __len__(self):
         return self.length
 
+    def batch(self):
+        """Produces batch indices for one epoch"""
+        # Deterministic shuffling based on epoch
+        generator = torch.Generator()
+        generator.manual_seed(pyfoal.RANDOM_SEED + self.epoch)
+
+        # Make variable-length batches with roughly equal number of frames
+        batches = []
+        for max_length, bucket in self.buckets:
+
+            # Shuffle bucket
+            bucket = bucket[
+                torch.randperm(len(bucket), generator=generator).tolist()]
+
+            # Get current batch size
+            size = pyfoal.MAX_FRAMES // max_length
+            
+            # Make batches
+            batches.extend(
+                [bucket[i:i + size] for i in range(0, len(bucket), size)])
+
+        # Shuffle
+        return [
+            batches[i] for i in 
+            torch.randperm(len(batches), generator=generator).tolist()]
+
     def set_epoch(self, epoch):
         self.epoch = epoch
+
+
+class DistributedSampler(Sampler):
+
+    def __init__(self, dataset):
+        super().__init__()
+        self.rank = torch.distributed.get_rank()
+        self.num_replicas = torch.distributed.get_world_size()
+        self.length = math.ceil(len(dataset) / self.num_replicas)
+        self.total_size = self.length * self.num_replicas
+
+    def __iter__(self):
+        # Divide among GPUs
+        return iter(self.batch()[self.rank:self.total_size:self.num_replicas])
