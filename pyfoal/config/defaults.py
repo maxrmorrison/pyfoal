@@ -109,7 +109,7 @@ CHECKPOINT_INTERVAL = 25000  # steps
 STEPS = 250000
 
 # Number of data loading worker threads
-NUM_WORKERS = 16
+NUM_WORKERS = 8
 
 # Seed for all random number generators
 RANDOM_SEED = 1234
@@ -120,11 +120,35 @@ RANDOM_SEED = 1234
 ###############################################################################
 
 
+# Whether to allow silent tokens on loud frames
+ALLOW_LOUD_SILENCE = True
+
+# Whether to allow spaces to be skipped
+ALLOW_SKIP_SPACE = True
+
 # Scale factor for the beta-binomial attention prior
 ATTENTION_PRIOR_SCALE_FACTOR = .05
+
+# Width of the attention layer
+ATTENTION_WIDTH = 80
+
+# Whether to use LSTM layer in text encoder
+LSTM = False
+
+# Kernel sizes for the mel encoder
+MEL_ENCODER_KERNEL_SIZES = [3, 1, 1]
+
+# Mel layer widths
+MEL_ENCODER_WIDTHS = [80, 160]
 
 # Width of the phoneme embedding
 PHONEME_EMBEDDING_SIZE = 512
 
+# Weight to apply to the attention prior
+PRIOR_WEIGHT = 1.
+
 # Sampling temperature
 TEMPERATURE = .0005
+
+# Kernel sizes for the text encoder
+TEXT_ENCODER_KERNEL_SIZES = [5, 5, 5, 3, 1]

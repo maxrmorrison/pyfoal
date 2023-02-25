@@ -1,6 +1,3 @@
-# Development
-# - hyperparameter search over temperature
-
 ###############################################################################
 # Configuration
 ###############################################################################
@@ -22,6 +19,7 @@ from .config.static import *
 # Module imports
 ###############################################################################
 
+
 from .core import *
 from .interpolate import is_voiced, is_vowel
 from .model import Model
@@ -33,6 +31,7 @@ from . import evaluate
 from . import g2p
 from . import interpolate
 from . import load
+from . import loudness
 from . import model
 from . import partition
 from . import plot

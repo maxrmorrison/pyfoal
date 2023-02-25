@@ -8,7 +8,7 @@ import pyfoal
 ###############################################################################
 
 
-def decode(phonemes, logits):
+def decode(phonemes, logits, loudness=None):
     """Get phoneme indices and frame counts from network output"""
     # Normalize
     observation = torch.nn.functional.log_softmax(logits, dim=0)
@@ -33,10 +33,23 @@ def decode(phonemes, logits):
         torch.arange(len(transition) - 1)] = 1.
     
     # Allow spaces to optionally be skipped
-    spaces = 1 + torch.where(
-        phonemes[1:-1] == pyfoal.convert.phoneme_to_index('<silent>'))[1]
-    transition[spaces + 1, spaces - 1] = 1.
+    if pyfoal.ALLOW_SKIP_SPACE:
+        
+        # Find spaces according to phonemes
+        space = phonemes[0] == pyfoal.convert.phoneme_to_index('<silent>')
 
+        # Get indices
+        spaces = 1 + torch.where(space[1:-1])[0]
+
+        # Uniform probability
+        transition[spaces + 1, spaces - 1] = 1.
+
+        # Maybe force skip silence if it's not actually silent
+        if not pyfoal.ALLOW_LOUD_SILENCE:
+            space[0] = False
+            space[-1] = False
+            observation[loudness.squeeze() > -60.][:, space] = -float('inf')
+    
     # Normalize
     transition /= transition.sum(dim=1, keepdim=True)
     transition = torch.log(transition)

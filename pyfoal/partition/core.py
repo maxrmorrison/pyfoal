@@ -70,7 +70,7 @@ def libritts():
     stems = sorted([f'{file.parent.name}/{file.stem}' for file in files])
 
     # Get split points
-    left, right = int(.70 * len(speakers)), int(.85 * len(speakers))
+    left, right = int(.9 * len(speakers)), int(.95 * len(speakers))
 
     # Partition speakers
     train_speakers = speakers[:left]

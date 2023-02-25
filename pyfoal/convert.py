@@ -115,6 +115,11 @@ def phonemes_to_indices(phonemes):
 ###############################################################################
 
 
+def seconds_to_frames(seconds):
+    """Convert seconds to frames"""
+    return int(seconds * pyfoal.SAMPLE_RATE / pyfoal.HOPSIZE)
+
+
 def frames_to_samples(frames):
     """Convert number of frames to samples"""
     return frames * pyfoal.HOPSIZE

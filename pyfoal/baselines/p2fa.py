@@ -147,7 +147,7 @@ class Aligner:
         """Write HTK arguments and convert data to HTK format"""
         # Save audio to disk
         audiofile = directory / 'sound.wav'
-        soundfile.write(str(audiofile), audio, SAMPLE_RATE)
+        soundfile.write(str(audiofile), audio.squeeze().numpy(), SAMPLE_RATE)
 
         # Save HTK process metadata
         code_file = directory / 'codetr.scp'

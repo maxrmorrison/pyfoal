@@ -271,9 +271,10 @@ def evaluate(directory, step, model, gpu, condition, loader):
                 alignments = [
                     pyfoal.postprocess(
                         phoneme[:, :phoneme_length],
-                        logit[:frame_length, :phoneme_length])
-                    for phoneme, logit, phoneme_length, frame_length in
-                    zip(phonemes, logits, phoneme_lengths, frame_lengths)]
+                        logit[:frame_length, :phoneme_length],
+                        audio[:, :pyfoal.convert.frames_to_samples(frame_length)])
+                    for phoneme, logit, audio, phoneme_length, frame_length in
+                    zip(phonemes, logits, audios, phoneme_lengths, frame_lengths)]
             
                 # Add audio and alignment plot
                 if i == 0:
@@ -283,14 +284,16 @@ def evaluate(directory, step, model, gpu, condition, loader):
                         stems[:pyfoal.PLOT_EXAMPLES],
                         frame_lengths[:pyfoal.PLOT_EXAMPLES],
                         phoneme_lengths[:pyfoal.PLOT_EXAMPLES],
-                        alignments[:pyfoal.PLOT_EXAMPLES])
+                        alignments[:pyfoal.PLOT_EXAMPLES],
+                        targets[:pyfoal.PLOT_EXAMPLES])
                     for (
                         audio,
                         logit,
                         stem,
                         frame_length,
                         phoneme_length,
-                        alignment
+                        alignment,
+                        target
                     ) in iterator:
 
                         # Add audio
@@ -304,6 +307,8 @@ def evaluate(directory, step, model, gpu, condition, loader):
                         logit[logit < -60.] = -60.
                         figures[f'attention/{stem}'] = \
                             pyfoal.plot.logits(logit.cpu(), alignment)
+                        figures[f'alignment/{stem}'] = \
+                            pyfoal.plot.alignment(audio, alignment, target)
 
             else:
 

@@ -38,11 +38,17 @@ def from_text_and_audio(
     """
     # Montreal forced aligner
     if aligner == 'mfa':
-        return pyfoal.baselines.mfa.align(text, audio, sample_rate)
+        return pyfoal.baselines.mfa.from_text_and_audio(
+            text,
+            audio,
+            sample_rate)
 
     # Penn phonetic forced aligner
     if aligner == 'p2fa':
-        return pyfoal.baselines.p2fa.align(text, audio, sample_rate)
+        return pyfoal.baselines.p2fa.from_text_and_audio(
+            text,
+            audio,
+            sample_rate)
 
     # RADTTS neural alignment
     if aligner == 'radtts':
@@ -57,7 +63,7 @@ def from_text_and_audio(
         logits = infer(phonemes.to(device), audio.to(device), checkpoint)
 
         # Postprocess
-        return postprocess(phonemes[0], logits[0])
+        return postprocess(phonemes[0], logits[0], audio[0])
 
     raise ValueError(f'Aligner {aligner} is not defined')
 
@@ -255,10 +261,16 @@ def infer(phonemes, audio, checkpoint=pyfoal.DEFAULT_CHECKPOINT):
         return infer.model(phonemes, audio, prior)
 
 
-def postprocess(phonemes, logits):
+def postprocess(phonemes, logits, audio):
     """Postprocess logits to produce alignment"""
+    # Maybe extract loudness to detect silences
+    if pyfoal.ALLOW_LOUD_SILENCE:
+        loudness = None
+    else:
+        loudness = pyfoal.loudness.from_audio(audio.cpu())
+    
     # Get per-phoneme frame counts from network output
-    indices, counts = pyfoal.viterbi.decode(phonemes, logits)
+    indices, counts = pyfoal.viterbi.decode(phonemes, logits, loudness)
 
     # Convert phoneme indices to phonemes
     phonemes = pyfoal.convert.indices_to_phonemes(

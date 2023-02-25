@@ -16,7 +16,9 @@ class Metrics:
         self.loss = Loss()
 
     def __call__(self):
-        results = self.loss()
+        results = {}
+        if self.loss.count > 0:
+            results = self.loss()
         if self.accuracy.count > 0:
             results = {**results, **self.accuracy()}
         if self.l1.count > 0:
@@ -31,7 +33,8 @@ class Metrics:
         alignments=None,
         targets=None):
         # Update loss
-        self.loss.update(logits, phoneme_lengths, frame_lengths)
+        if logits is not None:
+            self.loss.update(logits, phoneme_lengths, frame_lengths)
 
         # Update phoneme duration accuracy and error
         if alignments is not None and targets is not None:

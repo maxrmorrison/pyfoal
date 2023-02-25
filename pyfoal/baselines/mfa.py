@@ -22,7 +22,7 @@ def from_text_and_audio(text, audio, sample_rate=pyfoal.SAMPLE_RATE):
     # Write to temporary storage
     with tempfile.TemporaryDirectory() as directory:
         with pyfoal.chdir(directory):
-            soundfile.write('item.wav', audio, sample_rate)
+            soundfile.write('item.wav', audio.squeeze().numpy(), sample_rate)
             with open('item.txt', 'w') as file:
                 file.write(text)
 
@@ -53,13 +53,18 @@ def from_file_to_file(text_file, audio_file, output_file):
     from_file(text_file, audio_file).save(output_file)
 
 
-def from_files_to_files(text_files, audio_files, output_files, num_workers=None):
+def from_files_to_files(
+    text_files,
+    audio_files,
+    output_files,
+    num_workers=None):
     """Align text and audio on disk using MFA and save"""
     import montreal_forced_aligner as mfa
 
     # Download english dictionary and acoustic model
-    mfa.command_line.model.download_model('dictionary', 'english')
-    mfa.command_line.model.download_model('acoustic', 'english')
+    manager = mfa.models.ModelManager()
+    manager.download_model('dictionary', 'english_mfa')
+    manager.download_model('acoustic', 'english_mfa')
 
     with tempfile.TemporaryDirectory() as directory:
         directory = Path(directory)
@@ -78,8 +83,8 @@ def from_files_to_files(text_files, audio_files, output_files, num_workers=None)
             # Setup aligner
             aligner = mfa.alignment.PretrainedAligner(
                 corpus_directory=str(directory),
-                dictionary_path='english',
-                acoustic_model_path='english',
+                dictionary_path='english_mfa',
+                acoustic_model_path='english_mfa',
                 num_jobs=num_workers,
                 debug=False,
                 verbose=False)
@@ -121,7 +126,7 @@ def copy_and_convert(directory, text_file, audio_file):
     audio, sample_rate = soundfile.read(str(audio_file))
     soundfile.write(
         str(speaker_directory / f'{audio_file.stem}.wav'),
-        audio,
+        audio.squeeze(),
         sample_rate)
 
 

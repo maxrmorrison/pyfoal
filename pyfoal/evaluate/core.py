@@ -67,8 +67,8 @@ def datasets(
 
                 # Align
                 alignment = pyfoal.baselines.mfa.from_text_and_audio(
-                    text,
-                    audio)
+                    text[0],
+                    audio[0])
                 logits = None
 
             # Penn phonetic forced aligner
@@ -76,8 +76,8 @@ def datasets(
 
                 # Align
                 alignment = pyfoal.baselines.p2fa.from_text_and_audio(
-                    text,
-                    audio)
+                    text[0],
+                    audio[0])
                 logits = None
 
             # RAD-TTS neural forced aligner
@@ -90,7 +90,7 @@ def datasets(
                     checkpoint)
 
                 # Decode
-                alignment = pyfoal.postprocess(phonemes[0], logits[0])
+                alignment = pyfoal.postprocess(phonemes[0], logits[0], audio[0])
 
             else:
 
