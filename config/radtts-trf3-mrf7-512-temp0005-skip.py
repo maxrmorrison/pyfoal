@@ -1,10 +1,10 @@
 MODULE = 'pyfoal'
 
 # Configuration name
-CONFIG = 'radtts-trf3-mrf7-512-temp0005-noskip'
+CONFIG = 'radtts-trf3-mrf7-512-temp0005-skip'
 
 # Whether to allow spaces to be skipped
-ALLOW_SKIP_SPACE = False
+ALLOW_SKIP_SPACE = True
 
 # Kernel sizes for the mel encoder
 MEL_ENCODER_KERNEL_SIZES = [3, 3, 3]
