@@ -1,13 +1,16 @@
 MODULE = 'pyfoal'
 
 # Configuration name
-CONFIG = 'radtts-trf3-mrf3-512-aw256-temp0005'
+CONFIG = 'radtts-trf3-mrf9-512-4x512-temp0005-noloud'
 
-# Width of the attention layer
-ATTENTION_WIDTH = 256
+# Whether to allow silent tokens on loud frames
+ALLOW_LOUD_SILENCE = False
 
 # Kernel sizes for the mel encoder
-MEL_ENCODER_KERNEL_SIZES = [3, 1, 1]
+MEL_ENCODER_KERNEL_SIZES = [3, 3, 3, 3]
+
+# Mel layer widths
+MEL_ENCODER_WIDTHS = [512, 512, 512]
 
 # Width of the phoneme embedding
 PHONEME_EMBEDDING_SIZE = 512
