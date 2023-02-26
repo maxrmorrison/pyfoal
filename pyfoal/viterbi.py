@@ -46,6 +46,7 @@ def decode(phonemes, logits, loudness=None):
 
         # Maybe force skip silence if it's not actually silent
         if not pyfoal.ALLOW_LOUD_SILENCE:
+            # TODO - <silence> tokens are still there?
             space[0] = False
             space[-1] = False
             observation[loudness.squeeze() > -60.][:, space] = -float('inf')
