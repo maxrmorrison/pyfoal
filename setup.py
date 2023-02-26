@@ -16,7 +16,7 @@ setup(
         'g2p_en',
         'matplotlib==3.6.3',
         'numba==0.55',
-        'numpy==1.23',
+        'numpy',
         'phonemizer',
         'pypar',
         'requests',
