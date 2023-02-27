@@ -22,7 +22,7 @@ def decode(phonemes, logits, loudness=None):
         -float('inf'),
         dtype=observation.dtype)
     initial[0] = 0.
-    
+
     # Enforce monotonicity
     transition = torch.zeros(
         (observation.shape[1], observation.shape[1]),
@@ -31,10 +31,10 @@ def decode(phonemes, logits, loudness=None):
     transition[
         torch.arange(len(transition) - 1) + 1,
         torch.arange(len(transition) - 1)] = 1.
-    
+
     # Allow spaces to optionally be skipped
     if pyfoal.ALLOW_SKIP_SPACE:
-        
+
         # Find spaces according to phonemes
         space = phonemes[0] == pyfoal.convert.phoneme_to_index('<silent>')
 
@@ -46,11 +46,12 @@ def decode(phonemes, logits, loudness=None):
 
         # Maybe force skip silence if it's not actually silent
         if not pyfoal.ALLOW_LOUD_SILENCE:
-            # TODO - <silence> tokens are still there?
-            space[0] = False
-            space[-1] = False
-            observation[loudness.squeeze() > -60.][:, space] = -float('inf')
-    
+            space[0], space[-1] = False, False
+            silence_indices = (
+                (loudness.squeeze() > pyfoal.SILENCE_THRESHOLD)[:, None] &
+                space[None])
+            observation[silence_indices] = -float('inf')
+
     # Normalize
     transition /= transition.sum(dim=1, keepdim=True)
     transition = torch.log(transition)
@@ -82,11 +83,11 @@ def backward(posterior, memory):
         torch.argmax(posterior[-1]),
         dtype=torch.int,
         device=posterior.device)
-        
+
     # Backward
     for t in range(indices.shape[0] - 2, -1, -1):
         indices[t] = memory[t + 1, indices[t + 1]]
-    
+
     return indices
 
 
@@ -98,7 +99,7 @@ def forward(observation, transition, initial):
         observation.shape,
         dtype=torch.int,
         device=observation.device)
-    
+
     # Add prior to first frame
     posterior[0] = observation[0] + initial
 
