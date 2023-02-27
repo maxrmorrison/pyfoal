@@ -48,6 +48,21 @@ EVALUATION_DATASETS = ['arctic']
 
 
 ###############################################################################
+# Decoder parameters
+###############################################################################
+
+
+# Whether to allow silent tokens on loud frames
+ALLOW_LOUD_SILENCE = True
+
+# Whether to allow spaces to be skipped
+ALLOW_SKIP_SPACE = True
+
+# Threshold below which audio is considered silent
+SILENCE_THRESHOLD = -60.  # dB
+
+
+###############################################################################
 # Directories
 ###############################################################################
 
@@ -119,12 +134,6 @@ RANDOM_SEED = 1234
 # Model parameters
 ###############################################################################
 
-
-# Whether to allow silent tokens on loud frames
-ALLOW_LOUD_SILENCE = True
-
-# Whether to allow spaces to be skipped
-ALLOW_SKIP_SPACE = True
 
 # Scale factor for the beta-binomial attention prior
 ATTENTION_PRIOR_SCALE_FACTOR = .05
