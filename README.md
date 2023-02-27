@@ -40,9 +40,7 @@ RAD-TTS is used by default. Alignments can be saved to disk or accessed via the
     * [Partition](#partition)
     * [Train](#train)
     * [Monitor](#monitor)
-- [Evaluation](#evaluation)
     * [Evaluate](#evaluate)
-    * [Plot](#plot)
 - [References](#references)
 
 
@@ -83,8 +81,6 @@ For more help with HTK installation, see notes by
 
 ## Inference
 
-**TODO** - update
-
 ### Force-align text and audio
 
 ```python
@@ -117,63 +113,127 @@ alignment = pyfoal.from_text_and_audio(
 
 ### Application programming interface
 
-
-### Application programming interface
-
 #### `pyfoal.from_text_and_audio`
 
-**TODO**
 
 ```
+"""Phoneme-level forced-alignment
+
+Arguments
+    text : string
+        The speech transcript
+    audio : torch.tensor(shape=(1, samples))
+        The speech signal to process
+    sample_rate : int
+        The audio sampling rate
+
+Returns
+    alignment : pypar.Alignment
+        The forced alignment
+"""
 ```
 
 
 #### `pyfoal.from_file`
 
-**TODO**
-
 ```
+"""Phoneme alignment from audio and text files
+
+Arguments
+    text_file : Path
+        The corresponding transcript file
+    audio_file : Path
+        The audio file to process
+    aligner : str
+        The alignment method to use
+    checkpoint : Path
+        The checkpoint to use for neural methods
+    gpu : int
+        The index of the gpu to perform alignment on for neural methods
+
+Returns
+    alignment : Alignment
+        The forced alignment
+"""
 ```
 
 
 #### `pyfoal.from_file_to_file`
 
-**TODO**
-
 ```
+"""Perform phoneme alignment from files and save to disk
+
+Arguments
+    text_file : Path
+        The corresponding transcript file
+    audio_file : Path
+        The audio file to process
+    output_file : Path
+        The file to save the alignment
+    aligner : str
+        The alignment method to use
+    checkpoint : Path
+        The checkpoint to use for neural methods
+    gpu : int
+        The index of the gpu to perform alignment on for neural methods
+"""
 ```
 
 
 #### `pyfoal.from_files_to_files`
 
-**TODO**
-
 ```
+"""Perform parallel phoneme alignment from many files and save to disk
+
+Arguments
+    text_files : list
+        The transcript files
+    audio_files : list
+        The corresponding speech audio files
+    output_files : list
+        The files to save the alignments
+    aligner : str
+        The alignment method to use
+    num_workers : int
+        Number of CPU cores to utilize. Defaults to all cores.
+    checkpoint : Path
+        The checkpoint to use for neural methods
+    gpu : int
+        The index of the gpu to perform alignment on for neural methods
+"""
 ```
 
 
 ### Command-line interface
 
-**TODO** - update
-
 ```
-usage: python -m pyfoal
+python -m pyfoal
     [-h]
-    --text TEXT [TEXT ...]
-    --audio AUDIO [AUDIO ...]
-    --output OUTPUT [OUTPUT ...]
+    --text_files TEXT_FILES [TEXT_FILES ...]
+    --audio_files AUDIO_FILES [AUDIO_FILES ...]
+    --output_files OUTPUT_FILES [OUTPUT_FILES ...]
+    [--aligner ALIGNER]
     [--num_workers NUM_WORKERS]
+    [--checkpoint CHECKPOINT]
+    [--gpu GPU]
 
-optional arguments:
-    -h, --help          show this help message and exit
-    --text TEXT [TEXT ...]
-                        The speech transcript files
-    --audio AUDIO [AUDIO ...]
-                        The speech audio files
-    --output OUTPUT [OUTPUT ...]
-                        The json files to save the alignments
+Arguments:
+    -h, --help
+        show this help message and exit
+    --text_files TEXT_FILES [TEXT_FILES ...]
+        The speech transcript files
+    --audio_files AUDIO_FILES [AUDIO_FILES ...]
+        The speech audio files
+    --output_files OUTPUT_FILES [OUTPUT_FILES ...]
+        The files to save the alignments
+    --aligner ALIGNER
+        The alignment method to use
     --num_workers NUM_WORKERS
-                        Number of CPU cores to utilize. Defaults to all cores.
+        Number of CPU cores to utilize. Defaults to all cores.
+    --checkpoint CHECKPOINT
+        The checkpoint to use for neural methods
+    --gpu GPU
+        The index of the GPU to use for inference. Defaults to CPU.
 ```
 
 
@@ -220,9 +280,6 @@ must create a SSH connection with port forwarding to view Tensorboard.
 This can be done with `ssh -L 6006:localhost:6006 <user>@<server-ip-address>`.
 Then, open `localhost:6006` in your browser.
 
-
-## Evaluation
-
 ### Evaluate
 
 ```
@@ -234,10 +291,6 @@ python -m pyfal.evaluate \
 
 Evaluate a model. `<checkpoint>` is the checkpoint file to evaluate and `<gpu>`
 is the GPU index.
-
-### Plot
-
-**TODO** - alignment plot
 
 
 ## References

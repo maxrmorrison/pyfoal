@@ -267,7 +267,6 @@ def evaluate(directory, step, model, gpu, condition, loader):
             if condition == 'test':
 
                 # Decode
-                # TODO - preserve exact sample length
                 alignments = [
                     pyfoal.postprocess(
                         phoneme[:, :phoneme_length],
