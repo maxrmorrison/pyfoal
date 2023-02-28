@@ -67,7 +67,27 @@ def decode(phonemes, logits, loudness=None):
     indices = backward(posterior, memory)
 
     # Count consecutive indices
-    return torch.unique_consecutive(indices, return_counts=True)
+    indices, counts = torch.unique_consecutive(indices, return_counts=True)
+
+    # Maybe interpolate
+    if pyfoal.INTERPOLATE:
+
+        # Get interpolation value
+        frames = torch.cumsum(counts, dim=0)
+        idxs = torch.arange(len(frames), dtype=torch.long)
+        weight = torch.softmax(
+            torch.stack((
+                posterior[frames[:-1].long(), idxs[:-1]],
+                posterior[frames[:-1].long(), idxs[:-1] + 1])),
+            dim=0)[0]
+
+        # Apply to counts
+        counts = counts.to(torch.float)
+        counts[:-1] += weight
+
+    return indices, counts
+
+
 
 
 ###############################################################################

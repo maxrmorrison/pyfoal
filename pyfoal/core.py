@@ -268,7 +268,7 @@ def postprocess(phonemes, logits, audio):
         loudness = None
     else:
         loudness = pyfoal.loudness.from_audio(audio.cpu())
-    
+
     # Get per-phoneme frame counts from network output
     indices, counts = pyfoal.viterbi.decode(phonemes, logits, loudness)
 
