@@ -47,10 +47,10 @@ def decode(phonemes, logits, loudness=None):
         # Maybe force skip silence if it's not actually silent
         if not pyfoal.ALLOW_LOUD_SILENCE:
             space[0], space[-1] = False, False
-            silence_indices = (
+            loud_indices = (
                 (loudness.squeeze() > pyfoal.SILENCE_THRESHOLD)[:, None] &
                 space[None])
-            observation[silence_indices] = -float('inf')
+            observation[loud_indices] = -float('inf')
 
     # Normalize
     transition /= transition.sum(dim=1, keepdim=True)
@@ -74,11 +74,10 @@ def decode(phonemes, logits, loudness=None):
 
         # Get interpolation value
         frames = torch.cumsum(counts, dim=0)
-        idxs = torch.arange(len(frames), dtype=torch.long)
         weight = torch.softmax(
             torch.stack((
-                posterior[frames[:-1].long(), idxs[:-1]],
-                posterior[frames[:-1].long(), idxs[:-1] + 1])),
+                observation[frames[:-1].long(), indices[:-1].long()],
+                observation[frames[:-1].long(), indices[:-1].long() + 1])),
             dim=0)[0]
 
         # Apply to counts
