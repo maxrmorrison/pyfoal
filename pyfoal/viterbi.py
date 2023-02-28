@@ -46,11 +46,20 @@ def decode(phonemes, logits, loudness=None):
 
         # Maybe force skip silence if it's not actually silent
         if not pyfoal.ALLOW_LOUD_SILENCE:
+
+            # Save a copy
+            distribution = observation.clone()
+
+            # Mask loud silence
             space[0], space[-1] = False, False
             loud_indices = (
                 (loudness.squeeze() > pyfoal.SILENCE_THRESHOLD)[:, None] &
                 space[None])
             observation[loud_indices] = -float('inf')
+        else:
+            distribution = observation
+    else:
+        distribution = observation
 
     # Normalize
     transition /= transition.sum(dim=1, keepdim=True)
