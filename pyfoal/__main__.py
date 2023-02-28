@@ -12,7 +12,7 @@ import pyfoal
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--text_file',
+        '--text_files',
         nargs='+',
         required=True,
         type=Path,
