@@ -58,6 +58,9 @@ ALLOW_LOUD_SILENCE = True
 # Whether to allow spaces to be skipped
 ALLOW_SKIP_SPACE = True
 
+# Whether to perform local interpolation over time
+INTERPOLATE = False
+
 # Threshold below which audio is considered silent
 SILENCE_THRESHOLD = -60.  # dB
 
