@@ -272,6 +272,13 @@ def postprocess(phonemes, logits, audio):
     # Get per-phoneme frame counts from network output
     indices, counts = pyfoal.viterbi.decode(phonemes, logits, loudness)
 
+    # Account for padding applied to mels
+    if pyfoal.ADJUST_PADDING:
+        pad_count = pyfoal.convert.samples_to_frames(
+            (pyfoal.WINDOW_SIZE - pyfoal.HOPSIZE) // 2)
+        counts[0] -= pad_count
+        counts[-1] -= pad_count
+
     # Convert phoneme indices to phonemes
     phonemes = pyfoal.convert.indices_to_phonemes(
         phonemes[0, indices.to(torch.long)])

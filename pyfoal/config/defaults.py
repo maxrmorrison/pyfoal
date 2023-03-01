@@ -52,6 +52,9 @@ EVALUATION_DATASETS = ['arctic']
 ###############################################################################
 
 
+# Whether to account for the padding applied to the mels
+ADJUST_PADDING = False
+
 # Whether to allow silent tokens on loud frames
 ALLOW_LOUD_SILENCE = True
 
@@ -72,8 +75,8 @@ SILENCE_THRESHOLD = -60.  # dB
 
 # Root location for saving outputs
 # TEMPORARY
-# ROOT_DIR = Path(__file__).parent.parent.parent
-ROOT_DIR = Path('/data/max/pyfoal')
+ROOT_DIR = Path(__file__).parent.parent.parent
+# ROOT_DIR = Path('/data/max/pyfoal')
 
 # Location to save assets to be bundled with pip release
 ASSETS_DIR = Path(__file__).parent.parent / 'assets'

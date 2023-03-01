@@ -77,6 +77,7 @@ def decode(phonemes, logits, loudness=None):
 
     # Count consecutive indices
     indices, counts = torch.unique_consecutive(indices, return_counts=True)
+    counts = counts.to(torch.float)
 
     # Maybe interpolate
     if pyfoal.INTERPOLATE:
@@ -90,7 +91,6 @@ def decode(phonemes, logits, loudness=None):
             dim=0)[0]
 
         # Apply to counts
-        counts = counts.to(torch.float)
         counts[:-1] += weight
 
     return indices, counts
