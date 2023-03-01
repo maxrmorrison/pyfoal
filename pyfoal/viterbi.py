@@ -85,8 +85,8 @@ def decode(phonemes, logits, loudness=None):
         frames = torch.cumsum(counts, dim=0)
         weight = torch.softmax(
             torch.stack((
-                observation[frames[:-1].long(), indices[:-1].long()],
-                observation[frames[:-1].long(), indices[:-1].long() + 1])),
+                distribution[frames[:-1].long(), indices[:-1].long()],
+                distribution[frames[:-1].long(), indices[:-1].long() + 1])),
             dim=0)[0]
 
         # Apply to counts
@@ -94,8 +94,6 @@ def decode(phonemes, logits, loudness=None):
         counts[:-1] += weight
 
     return indices, counts
-
-
 
 
 ###############################################################################

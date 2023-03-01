@@ -1,5 +1,3 @@
-import itertools
-
 import matplotlib.pyplot as plt
 import torch
 
@@ -11,20 +9,23 @@ import pyfoal
 ###############################################################################
 
 
-def alignment(audio, x, y=None):
+def alignments(audio, alignment, target=None):
     """Plot the word alignment--optionally two"""
-    figure, axes = plt.subplots(2 + int(y is not None), 1, figsize=(18, 6))
+    figure, axes = plt.subplots(
+        2 + int(target is not None),
+        1,
+        figsize=(18, 6))
     plt.subplots_adjust(wspace=0, hspace=0)
     
     # Plot waveform
     waveform(axes[0], audio)
 
     # Plot phonemes and dividers of alignment
-    phonemes(axes[1], x, 2)
+    phonemes(axes[1], alignment, 2)
 
     # Maybe plot target alignment dividers in different color
-    if y is not None:
-        phonemes(axes[2], y, 3, 'red')
+    if target is not None:
+        phonemes(axes[2], target, 3, 'red')
 
     return figure
     

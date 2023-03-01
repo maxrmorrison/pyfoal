@@ -307,7 +307,7 @@ def evaluate(directory, step, model, gpu, condition, loader):
                         figures[f'attention/{stem}'] = \
                             pyfoal.plot.logits(logit.cpu(), alignment)
                         figures[f'alignment/{stem}'] = \
-                            pyfoal.plot.alignment(audio, alignment, target)
+                            pyfoal.plot.alignments(audio, alignment, target)
 
             else:
 

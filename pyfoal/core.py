@@ -277,6 +277,7 @@ def postprocess(phonemes, logits, audio):
         phonemes[0, indices.to(torch.long)])
 
     # Get phoneme durations in seconds
+    # TODO - does this accurately handle that the mels are centerpoint-aligned?
     times = torch.cumsum(
         torch.cat(
             (torch.zeros(1, dtype=counts.dtype, device=counts.device),
