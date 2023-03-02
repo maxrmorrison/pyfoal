@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 with open('README.md', encoding='utf-8') as file:
@@ -14,21 +14,21 @@ setup(
     url='https://github.com/maxrmorrison/pyfoal',
     install_requires=[
         'g2p_en',
-        'matplotlib==3.6.3',
-        'numba==0.55',
-        'numpy',
+        'matplotlib',
+        'numba',
+        'numpy==1.23',
         'phonemizer',
         'pypar',
         'requests',
-        'scikit-learn==1.1',
-        'scipy==1.9',
+        'scikit-learn',
+        'scipy',
         'soundfile',
         'tensorboard',
         'torch',
         'torchaudio',
         'tqdm',
         'yapecs'],
-    packages=['pyfoal'],
+    packages=find_packages(),
     package_data={'pyfoal': ['assets/*', 'assets/*/*']},
     long_description=long_description,
     long_description_content_type='text/markdown',
