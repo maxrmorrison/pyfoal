@@ -31,6 +31,12 @@ def from_text_and_audio(
             The speech signal to process
         sample_rate : int
             The audio sampling rate
+        aligner : str
+            The alignment method to use
+        checkpoint : Path
+            The checkpoint to use for neural methods
+        gpu : int
+            The index of the gpu to perform alignment on for neural methods
 
     Returns
         alignment : pypar.Alignment
