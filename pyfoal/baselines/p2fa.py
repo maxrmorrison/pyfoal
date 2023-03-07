@@ -6,7 +6,6 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-import g2p_en
 import pypar
 import soundfile
 
@@ -29,7 +28,7 @@ SAMPLE_RATE = 11025
 
 def from_text_and_audio(text, audio, sample_rate=pyfoal.SAMPLE_RATE):
     """Align text and audio using P2FA"""
-    duration = len(audio) / sample_rate
+    duration = audio.shape[-1] / sample_rate
 
     # Maybe resample
     audio = pyfoal.resample(audio, sample_rate, SAMPLE_RATE)
@@ -48,10 +47,10 @@ def from_file(text_file, audio_file):
     text = pyfoal.load.text(text_file)
 
     # Load audio
-    audio, sample_rate = pyfoal.load.audio(audio_file)
+    audio = pyfoal.load.audio(audio_file)
 
     # Align
-    return from_text_and_audio(text, audio, sample_rate)
+    return from_text_and_audio(text, audio, pyfoal.SAMPLE_RATE)
 
 
 def from_file_to_file(text_file, audio_file, output_file):
@@ -60,15 +59,18 @@ def from_file_to_file(text_file, audio_file, output_file):
 
 
 def from_files_to_files(text_files, audio_files, output_files, num_workers=None):
+    """Align many text and audio files on disk using P2FA and save"""
     # Default to using all cpus
     if num_workers is None:
-        num_workers = os.cpu_count()
+        num_workers = max(len(text_files) // 2, os.cpu_count() // 2)
 
     # Launch multiprocessed P2FA alignment
     align_fn = functools.partial(from_file_to_file)
     iterator = zip(text_files, audio_files, output_files)
-    with mp.Pool(num_workers) as pool:
+    with mp.get_context('spawn').Pool(num_workers) as pool:
         pool.starmap(align_fn, iterator)
+    # for item in pyfoal.iterator(iterator, 'Test', total=len(text_files)):
+    #     align_fn(*item)
 
 
 ###############################################################################
@@ -102,13 +104,21 @@ class Aligner:
             # Preprocess
             self.format(directory, audio, script_file)
 
-            # Remove characters we can't handle
-            text = self.lint(text)
+            # Grapheme-to-phoneme
+            text, phonemes = pyfoal.g2p.from_text(
+                text,
+                to_indices=False,
+                remove_prominence=False)
+
+            # Use P2FA silence token
+            for i in range(len(phonemes)):
+                if phonemes[i] == '<silent>':
+                    phonemes[i] = ' '
 
             # Run alignment model
             alignment_file = directory / 'alignment.mlf'
             self.viterbi(self.write_words(directory, text),
-                         self.write_pronunciation(directory, text),
+                         self.write_pronunciation(directory, text, phonemes),
                          directory,
                          script_file,
                          alignment_file)
@@ -132,14 +142,30 @@ class Aligner:
 
         # Constant offset and rate correction
         # TODO - verify
-        durations[0] += .0125
-        durations = [d * 11000. / 11025. for d in durations]
+        # TEMPORARY
+        try:
+            durations[0] += .0125
+            durations = [d * 11000. / 11025. for d in durations]
+        except Exception as error:
+            print(error)
+            import pdb; pdb.set_trace()
+            pass
 
         # End at audio duration
         durations[-1] = duration - sum(durations[:-1])
 
         # Update alignment durations
         alignment.update(durations=durations)
+
+        # Change silence token
+        for i in range(len(alignment.phonemes())):
+            if str(alignment.phonemes()[i]) == 'sp':
+                alignment.phonemes()[i].phoneme = '<silent>'
+
+            # Remove prominence markings
+            alignment.phonemes()[i].phoneme = ''.join(
+                c for c in str(alignment.phonemes()[i]) if not c.isdigit())
+
 
         return alignment
 
@@ -161,20 +187,6 @@ class Aligner:
         subprocess.Popen(
             ['HCopy', '-T', '1', '-C', self.hcopy, '-S', code_file],
             stdout=subprocess.DEVNULL)
-
-    def lint(self, text):
-        """Preprocess text for aligner"""
-        # Remove newlines, tabs, and extra whitespace
-        text = text.replace('\n', ' ')
-        text = text.replace('\t', ' ')
-        while '  ' in text:
-            text = text.replace('  ', ' ')
-
-        # Convert numbers to text
-        text = g2p_en.expand.normalize_numbers(text)
-
-        # Remove punctuation
-        return text.translate(self.punctuation_table)
 
     def split_phonemes(self, phonemes):
         """Split phoneme list into words"""
@@ -209,11 +221,8 @@ class Aligner:
         with open(directory / 'aligned.results', 'w') as file:
             subprocess.Popen(args, stdout=file).wait()
 
-    def write_pronunciation(self, directory, text):
+    def write_pronunciation(self, directory, text, phonemes):
         """Write the pronunciation dictionary"""
-        # Grapheme-to-phoneme conversion
-        phonemes = g2p_en.G2p()(text)
-
         # Convert to HTK dictionary format
         iterator = zip(text.upper().split(), self.split_phonemes(phonemes))
         lines = ['{}  {}\n'.format(w, ' '.join(p)) for w, p in iterator]

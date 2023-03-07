@@ -107,13 +107,13 @@ def from_file(
         text = pyfoal.load.text(text_file)
 
         # Load audio
-        audio, sample_rate = pyfoal.load.audio(audio_file)
+        audio = pyfoal.load.audio(audio_file)
 
         # Align
         return from_text_and_audio(
             text,
             audio,
-            sample_rate,
+            pyfoal.SAMPLE_RATE,
             aligner,
             checkpoint,
             gpu)
@@ -302,7 +302,7 @@ def postprocess(phonemes, logits, audio):
 def preprocess(text, audio, sample_rate):
     """Preprocess text and audio for alignment"""
     # Convert text to IPA
-    phonemes = pyfoal.g2p.from_text(text)
+    phonemes = pyfoal.g2p.from_text(text)[1]
 
     # Resample audio
     audio = resample(audio, sample_rate)

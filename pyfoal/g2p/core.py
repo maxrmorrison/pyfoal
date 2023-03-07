@@ -13,7 +13,7 @@ import pyfoal
 ###############################################################################
 
 
-def from_text(text):
+def from_text(text, to_indices=True, remove_prominence=True):
     """Convert text to cmu"""
     # Remove newlines, tabs, and extra whitespace
     text = text.replace('\n', ' ')
@@ -32,9 +32,10 @@ def from_text(text):
     phonemes = g2p_en.G2p()(text)
 
     # Remove prominence markings
-    phonemes = [
-        ''.join(c for c in phoneme if not c.isdigit())
-        for phoneme in phonemes]
+    if remove_prominence:
+        phonemes = [
+            ''.join(c for c in phoneme if not c.isdigit())
+            for phoneme in phonemes]
     
     # Handle silences
     phonemes = [
@@ -46,10 +47,11 @@ def from_text(text):
     if phonemes[-1] != '<silent>':
         phonemes.append('<silent>')
 
-    # Convert to indices
-    indices = pyfoal.convert.phonemes_to_indices(phonemes)
-
-    return torch.tensor(indices, dtype=torch.long)
+    # Maybe convert to indices
+    if to_indices:
+        indices = pyfoal.convert.phonemes_to_indices(phonemes)
+        return text, torch.tensor(indices, dtype=torch.long)
+    return text, phonemes
 
 
 def from_file(text_file):

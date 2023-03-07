@@ -14,7 +14,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--datasets',
-        default=pyfoal.EVALUATION_DATASETS,
+        default=pyfoal.DATASETS,
         nargs='+',
         help='The datasets to evaluate')
     parser.add_argument(

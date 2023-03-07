@@ -11,7 +11,7 @@ import pyfoal
 
 
 def datasets(
-    datasets=pyfoal.EVALUATION_DATASETS,
+    datasets=pyfoal.DATASETS,
     checkpoint=pyfoal.DEFAULT_CHECKPOINT,
     gpu=None):
     """Perform evaluation"""
