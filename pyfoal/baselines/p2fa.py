@@ -62,15 +62,13 @@ def from_files_to_files(text_files, audio_files, output_files, num_workers=None)
     """Align many text and audio files on disk using P2FA and save"""
     # Default to using all cpus
     if num_workers is None:
-        num_workers = max(len(text_files) // 2, os.cpu_count() // 2)
+        num_workers = max(min(len(text_files) // 2, os.cpu_count() // 2), 1)
 
     # Launch multiprocessed P2FA alignment
     align_fn = functools.partial(from_file_to_file)
     iterator = zip(text_files, audio_files, output_files)
     with mp.get_context('spawn').Pool(num_workers) as pool:
         pool.starmap(align_fn, iterator)
-    # for item in pyfoal.iterator(iterator, 'Test', total=len(text_files)):
-    #     align_fn(*item)
 
 
 ###############################################################################
@@ -142,14 +140,8 @@ class Aligner:
 
         # Constant offset and rate correction
         # TODO - verify
-        # TEMPORARY
-        try:
-            durations[0] += .0125
-            durations = [d * 11000. / 11025. for d in durations]
-        except Exception as error:
-            print(error)
-            import pdb; pdb.set_trace()
-            pass
+        durations[0] += .0125
+        durations = [d * 11000. / 11025. for d in durations]
 
         # End at audio duration
         durations[-1] = duration - sum(durations[:-1])
