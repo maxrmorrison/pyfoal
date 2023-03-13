@@ -36,7 +36,9 @@ def from_text_and_audio(text, audio, sample_rate=pyfoal.SAMPLE_RATE):
         from_text_and_audio.aligner = Aligner()
 
     # Perform forced alignment
-    return from_text_and_audio.aligner(text, audio, sample_rate)
+    alignment = from_text_and_audio.aligner(text, audio)
+
+    return alignment
 
 
 def from_file(text_file, audio_file):
@@ -87,7 +89,7 @@ class Aligner:
         punctuation = [s for s in string.punctuation + '”“—' if s != '-']
         self.punctuation_table = str.maketrans('-', ' ', ''.join(punctuation))
 
-    def __call__(self, text, audio, sample_rate):
+    def __call__(self, text, audio):
         """Retrieve the forced alignment"""
         # Alignment artifacts are placed in temporary storage and cleaned-up
         # after alignment is complete
@@ -122,7 +124,7 @@ class Aligner:
             # Alignment rate and offset correction
             alignment = self.correct_alignment(
                 alignment_file,
-                audio.shape[-1] / sample_rate)
+                audio.shape[-1] / SAMPLE_RATE)
 
         return alignment
 
