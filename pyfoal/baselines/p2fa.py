@@ -152,9 +152,12 @@ class Aligner:
         alignment.update(durations=durations)
 
         # Change silence token
+        for i in range(len(alignment)):
+            if str(alignment[i]) == 'sp':
+                alignment[i].word = pypar.SILENCE
         for i in range(len(alignment.phonemes())):
             if str(alignment.phonemes()[i]) == 'sp':
-                alignment.phonemes()[i].phoneme = '<silent>'
+                alignment.phonemes()[i].phoneme = pypar.SILENCE
 
             # Remove prominence markings
             alignment.phonemes()[i].phoneme = ''.join(
