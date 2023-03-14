@@ -28,6 +28,9 @@ SAMPLE_RATE = 11025
 
 def from_text_and_audio(text, audio, sample_rate=pyfoal.SAMPLE_RATE):
     """Align text and audio using P2FA"""
+    # Get duration in seconds at original sample rate
+    duration = audio.shape[-1] / sample_rate
+    
     # Maybe resample
     audio = pyfoal.resample(audio, sample_rate, SAMPLE_RATE)
 
@@ -36,7 +39,7 @@ def from_text_and_audio(text, audio, sample_rate=pyfoal.SAMPLE_RATE):
         from_text_and_audio.aligner = Aligner()
 
     # Perform forced alignment
-    alignment = from_text_and_audio.aligner(text, audio)
+    alignment = from_text_and_audio.aligner(text, audio, duration)
 
     return alignment
 
@@ -89,7 +92,7 @@ class Aligner:
         punctuation = [s for s in string.punctuation + '”“—' if s != '-']
         self.punctuation_table = str.maketrans('-', ' ', ''.join(punctuation))
 
-    def __call__(self, text, audio):
+    def __call__(self, text, audio, duration):
         """Retrieve the forced alignment"""
         # Alignment artifacts are placed in temporary storage and cleaned-up
         # after alignment is complete
@@ -122,9 +125,7 @@ class Aligner:
                          alignment_file)
 
             # Alignment rate and offset correction
-            alignment = self.correct_alignment(
-                alignment_file,
-                audio.shape[-1] / SAMPLE_RATE)
+            alignment = self.correct_alignment(alignment_file, duration)
 
         return alignment
 
