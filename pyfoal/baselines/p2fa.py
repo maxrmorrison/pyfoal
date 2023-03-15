@@ -30,7 +30,7 @@ def from_text_and_audio(text, audio, sample_rate=pyfoal.SAMPLE_RATE):
     """Align text and audio using P2FA"""
     # Get duration in seconds at original sample rate
     duration = audio.shape[-1] / sample_rate
-    
+
     # Maybe resample
     audio = pyfoal.resample(audio, sample_rate, SAMPLE_RATE)
 
@@ -38,10 +38,8 @@ def from_text_and_audio(text, audio, sample_rate=pyfoal.SAMPLE_RATE):
     if not hasattr(from_text_and_audio, 'aligner'):
         from_text_and_audio.aligner = Aligner()
 
-    # Perform forced alignment
-    alignment = from_text_and_audio.aligner(text, audio, duration)
-
-    return alignment
+    # Align
+    return from_text_and_audio.aligner(text, audio, duration)
 
 
 def from_file(text_file, audio_file):
