@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pypar
 import soundfile
+import torchaudio
 
 import pyfoal
 
@@ -48,10 +49,10 @@ def from_file(text_file, audio_file):
     text = pyfoal.load.text(text_file)
 
     # Load audio
-    audio = pyfoal.load.audio(audio_file)
+    audio, sample_rate = torchaudio.load(audio_file)
 
     # Align
-    return from_text_and_audio(text, audio, pyfoal.SAMPLE_RATE)
+    return from_text_and_audio(text, audio, sample_rate)
 
 
 def from_file_to_file(text_file, audio_file, output_file):
@@ -59,7 +60,11 @@ def from_file_to_file(text_file, audio_file, output_file):
     from_file(text_file, audio_file).save(output_file)
 
 
-def from_files_to_files(text_files, audio_files, output_files, num_workers=None):
+def from_files_to_files(
+    text_files,
+    audio_files,
+    output_files,
+    num_workers=None):
     """Align many text and audio files on disk using P2FA and save"""
     # Default to using all cpus
     if num_workers is None:
