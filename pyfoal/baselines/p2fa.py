@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+import numpy as np
 import pypar
 import soundfile
 import torchaudio
@@ -175,7 +176,7 @@ class Aligner:
         audiofile = directory / 'sound.wav'
         soundfile.write(
             str(audiofile),
-            audio.cpu().squeeze().numpy(),
+            audio.cpu().squeeze().numpy().astype(np.float32),
             SAMPLE_RATE)
 
         # Save HTK process metadata
