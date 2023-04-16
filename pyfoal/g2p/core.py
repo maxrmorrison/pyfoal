@@ -36,7 +36,7 @@ def from_text(text, to_indices=True, remove_prominence=True):
         phonemes = [
             ''.join(c for c in phoneme if not c.isdigit())
             for phoneme in phonemes]
-    
+
     # Handle silences
     phonemes = [
         '<silent>' if phoneme == ' ' else phoneme for phoneme in phonemes]
@@ -56,7 +56,7 @@ def from_text(text, to_indices=True, remove_prominence=True):
 
 def from_file(text_file):
     """Convert text on disk to phonemes"""
-    return from_text(pyfoal.load.text(text_file))
+    return from_text(pyfoal.load.text(text_file))[1]
 
 
 def from_file_to_file(text_file, output_file):
