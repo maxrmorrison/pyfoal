@@ -28,7 +28,7 @@ def partition(dataset):
 def phonemes():
     """Load list of phonemes"""
     # Cache phonemes
-    if not hasattr(phonemes, pyfoal.ALIGNER):
+    if not hasattr(phonemes, 'phonemes'):
 
         # Load file
         with open(pyfoal.ASSETS_DIR / 'g2p' / 'phonemes.csv') as file:
@@ -38,10 +38,8 @@ def phonemes():
             next(reader)
 
             # Update cache
-            setattr(phonemes, pyfoal.ALIGNER, [row[0] for row in reader])
-
-    # Get phonemes
-    return getattr(phonemes, pyfoal.ALIGNER)
+            phonemes.phonemes = [row[0] for row in reader]
+    return phonemes.phonemes
 
 
 def text(file):
@@ -54,7 +52,7 @@ def voicing():
     """Load a map that indicates whether each phoneme is voiced"""
     # Cache voicing
     if not hasattr(voicing, 'voicing'):
-        with open(pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'phonemes.csv') as file:
+        with open(pyfoal.ASSETS_DIR / 'g2p' / 'phonemes.csv') as file:
             reader = csv.reader(file)
 
             # Skip header
@@ -69,7 +67,7 @@ def vowels():
     """Load a map that indicates whether each phoneme is a vowel"""
     # Cache vowels
     if not hasattr(vowels, 'vowels'):
-        with open(pyfoal.ASSETS_DIR / pyfoal.ALIGNER / 'phonemes.csv') as file:
+        with open(pyfoal.ASSETS_DIR / 'g2p' / 'phonemes.csv') as file:
             reader = csv.reader(file)
 
             # Skip header
