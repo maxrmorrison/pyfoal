@@ -12,6 +12,7 @@ yapecs.configure('pyfoal', defaults)
 
 # Import configuration parameters
 from .config.defaults import *
+from . import time
 from .config.static import *
 
 

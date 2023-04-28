@@ -92,7 +92,7 @@ def train(
     ##############################
     # Maybe load from checkpoint #
     ##############################
-    
+
     path = pyfoal.checkpoint.latest_path(checkpoint_directory, '*.pt')
 
     if path is not None:
@@ -241,7 +241,7 @@ def evaluate(directory, step, model, gpu, condition, loader):
 
     # Prepare model for inference
     with pyfoal.inference_context(model):
-        
+
         for i, batch in enumerate(loader):
 
             # Unpack batch
@@ -274,7 +274,7 @@ def evaluate(directory, step, model, gpu, condition, loader):
                         audio[:, :pyfoal.convert.frames_to_samples(frame_length)])
                     for phoneme, logit, audio, phoneme_length, frame_length in
                     zip(phonemes, logits, audios, phoneme_lengths, frame_lengths)]
-            
+
                 # Add audio and alignment plot
                 if i == 0:
                     iterator = zip(
@@ -315,11 +315,11 @@ def evaluate(directory, step, model, gpu, condition, loader):
 
             # Update metrics
             metrics.update(
+                alignments,
+                targets,
                 logits,
                 phoneme_lengths.to(device),
-                frame_lengths.to(device),
-                alignments,
-                targets)
+                frame_lengths.to(device))
 
             # Stop when we exceed some number of batches
             if i + 1 == pyfoal.LOG_STEPS:

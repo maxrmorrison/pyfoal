@@ -14,3 +14,12 @@ DEFAULT_CHECKPOINT = pyfoal.ASSETS_DIR / 'checkpoints'
 
 # Default configuration file
 DEFAULT_CONFIGURATION = pyfoal.ASSETS_DIR / 'configs' / 'radtts.py'
+
+
+###############################################################################
+# Evaluation
+###############################################################################
+
+
+# Timer for benchmarking generation
+TIMER = pyfoal.time.Context()

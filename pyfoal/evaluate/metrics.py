@@ -27,19 +27,18 @@ class Metrics:
 
     def update(
         self,
-        logits,
-        phoneme_lengths,
-        frame_lengths,
-        alignments=None,
-        targets=None):
+        alignments,
+        targets,
+        logits=None,
+        phoneme_lengths=None,
+        frame_lengths=None):
+        # Update phoneme duration accuracy and error
+        self.accuracy.update(alignments, targets)
+        self.l1.update(alignments, targets)
+
         # Update loss
         if logits is not None:
             self.loss.update(logits, phoneme_lengths, frame_lengths)
-
-        # Update phoneme duration accuracy and error
-        if alignments is not None and targets is not None:
-            self.accuracy.update(alignments, targets)
-            self.l1.update(alignments, targets)
 
     def reset(self):
         self.accuracy.reset()
@@ -57,7 +56,7 @@ class Accuracy:
     def __init__(self, levels=[.01, .005, .0025, .00125]):
         self.levels = levels
         self.reset()
-    
+
     def __call__(self):
         return {
             f'accuracy-{level}': (self.totals[level] / self.count).item()
@@ -68,7 +67,7 @@ class Accuracy:
 
             if alignment is None or target is None:
                 continue
-            
+
             # Extract phoneme durations
             predicted_durations = torch.tensor([
                 phoneme.duration() for phoneme in alignment.phonemes()
@@ -76,7 +75,7 @@ class Accuracy:
             target_durations = torch.tensor([
                 phoneme.duration() for phoneme in target.phonemes()
                 if str(phoneme) != '<silent>'])
-        
+
             # Maybe update
             if len(predicted_durations) == len(target_durations):
                 for level in self.levels:
@@ -102,7 +101,7 @@ class L1:
 
             if alignment is None or target is None:
                 continue
-            
+
             # Extract phoneme durations
             predicted_durations = torch.tensor([
                 phoneme.duration() for phoneme in alignment.phonemes()
