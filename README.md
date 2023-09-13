@@ -3,7 +3,9 @@
 
 [![PyPI](https://img.shields.io/pypi/v/pyfoal.svg)](https://pypi.python.org/pypi/pyfoal)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Downloads](https://pepy.tech/badge/pyfoal)](https://pepy.tech/project/pyfoal)
+[![Downloads](https://static.pepy.tech/badge/pyfoal)](https://pepy.tech/project/pyfoal)
+
+</div>
 
 </div>
 
