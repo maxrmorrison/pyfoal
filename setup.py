@@ -15,7 +15,7 @@ setup(
     install_requires=[
         'g2p_en',
         'matplotlib',
-        'numpy<1.24',
+        'numpy',
         'phonemizer',
         'pypar',
         'requests',
