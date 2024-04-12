@@ -8,7 +8,7 @@ with open('README.md', encoding='utf-8') as file:
 setup(
     name='pyfoal',
     description='Python forced aligner',
-    version='1.0.0',
+    version='1.0.1',
     author='Max Morrison',
     author_email='maxrmorrison@gmail.com',
     url='https://github.com/maxrmorrison/pyfoal',
