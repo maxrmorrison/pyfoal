@@ -14,6 +14,7 @@ setup(
     url='https://github.com/maxrmorrison/pyfoal',
     install_requires=[
         'g2p_en',
+        'librosa',
         'matplotlib',
         'numpy',
         'phonemizer',
