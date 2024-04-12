@@ -176,7 +176,7 @@ class Aligner:
         audiofile = directory / 'sound.wav'
         soundfile.write(
             str(audiofile),
-            audio.cpu().squeeze().numpy().astype(np.float32),
+            audio.cpu().squeeze().numpy().astype(float),
             SAMPLE_RATE)
 
         # Save HTK process metadata
